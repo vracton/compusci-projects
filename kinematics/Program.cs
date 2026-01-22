@@ -5,7 +5,7 @@
 
     static void Main(string[] args)
     {
-        Challenge();
+        LevelThree();
     }
 
     static void LevelOne()
@@ -47,14 +47,15 @@
         Console.WriteLine("time\tpos\tvel\ta");
         for (int i = 0; i <= 200; i += 1)
         {
+            double aDrag = -C * v * Math.Abs(v) / m;
+
             if (i > 0)
             {
-                double aDrag = -C * v * Math.Abs(v) / m;
-
                 v += (-g + aDrag) * 0.1;
                 z += v * 0.1;
             }
-            Console.WriteLine($"{i * 0.1:F1}\t{z:F1}\t{v:F2}\t{-g}");
+
+            Console.WriteLine($"{i * 0.1:F1}\t{z:F1}\t{v:F2}\t{(-g+aDrag):F2}");
         }
     }
 
@@ -68,17 +69,18 @@
         Console.WriteLine("time\tpos\tvel\ta");
         for (int i = 0; i <= 200; i += 1)
         {
+            double fGrav = m * -g;
+            double fDrag = -C * v * Math.Abs(v);
+            double fSpring = -(z + 3) * k;
+            double fNet = fGrav + fDrag + fSpring;
+
             if (i > 0)
             {
-                double fGrav = m * -g;
-                double fDrag = -C * v * Math.Abs(v);
-                double fSpring = -k * (z > 0 ? z - 3 : z + 3);
-                double fNet = fGrav + fDrag + fSpring;
-
                 v += (fNet / m) * 0.1;
                 z += v * 0.1;
             }
-            Console.WriteLine($"{i * 0.1:F1}\t{z:F1}\t{v:F2}\t{-g}");
+
+            Console.WriteLine($"{i * 0.1:F1}\t{z:F1}\t{v:F2}\t{(fNet / m):F2}");
         }
     }
 }
