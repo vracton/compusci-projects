@@ -1,4 +1,4 @@
-﻿class Program
+﻿class Kinematics
 {
     const double g = 9.8;
     const double C = 0.5;
