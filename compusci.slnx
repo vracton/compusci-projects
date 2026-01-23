@@ -1,3 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Logger.cs" />
+  </Folder>
   <Project Path="kinematics/kinematics.csproj" Id="75861fd4-c8a0-4d1a-b25f-293891b5916f" />
+  <Project Path="projectile-motion/projectile-motion.csproj" Id="a1051cd1-3a9b-49f3-afc2-5fa9889a2879" />
 </Solution>
