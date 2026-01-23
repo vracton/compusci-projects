@@ -25,8 +25,16 @@ namespace Logging
 
             foreach (object o in vals)
             {
-                logToConsole += o.ToString() + "\t";
-                logToFile += o.ToString() + " ";
+                if (o is double)
+                {
+                    logToConsole += ((double)o).ToString("F3") + "\t";
+                    logToFile += ((double)o).ToString("F3") + " ";
+                }
+                else
+                {
+                    logToConsole += o.ToString() + "\t";
+                    logToFile += o.ToString() + " ";
+                }
             }
 
             logToConsole = logToConsole.Trim();
