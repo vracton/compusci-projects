@@ -5,7 +5,7 @@
 
     static void Main(string[] args)
     {
-        LevelThree();
+        Challenge();
     }
 
     static void LevelOne()
@@ -63,7 +63,7 @@
     {
         const double m = 3.0;
         const double k = 9.0;
-        double v = 2.0;
+        double v = 120.0;
         double z = -4.0;
 
         Console.WriteLine("time\tpos\tvel\ta");
