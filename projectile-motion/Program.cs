@@ -25,7 +25,8 @@ class ProjectileMotion
         const double dt = 0.01;
         logger.WriteLine("t", "x", "z", "v", "a");
 
-        for (int t = 0; t <= 20 * (int)(1 / dt); t++)
+        int t = 0;
+        while (pos.z >= 0.0)
         {
             if (t > 0)
             {
@@ -35,6 +36,7 @@ class ProjectileMotion
                 pos.z += v.z * dt;
             }
             logger.WriteLine((t * dt), pos.x, pos.z, Math.Sqrt(v.x * v.x + v.z * v.z), g); //auto-rounds to 3 places
+            t++;
         }
     }
 
@@ -44,7 +46,7 @@ class ProjectileMotion
 
         const double m = 3.0;
         const double theta = 45.0 * (Math.PI / 180.0);
-        const double v0 = 3.0;
+        const double v0 = 4.0;
 
         var v = (x: v0 * Math.Cos(theta), z: v0 * Math.Sin(theta));
         var pos = (x: 0.0, z: 0.0);
@@ -52,7 +54,8 @@ class ProjectileMotion
         const double dt = 0.01;
         logger.WriteLine("t", "x", "z", "v", "a");
 
-        for (int t = 0; t <= 20 * (int)(1 / dt); t++)
+        int t = 0; //ticks
+        while (pos.z >= 0)
         {
             double vTotal = Math.Sqrt(v.x * v.x + v.z * v.z);
             double dragAccel = C * vTotal * vTotal / m;
@@ -79,6 +82,7 @@ class ProjectileMotion
                 pos.z += v.z * dt;
             }
             logger.WriteLine(t * dt, pos.x, pos.z, Math.Sqrt(v.x * v.x + v.z * v.z), Math.Sqrt(a.x * a.x + a.z * a.z));
+            t++;
         }
     }
 
@@ -96,7 +100,9 @@ class ProjectileMotion
         const double dt = 0.01;
         logger.WriteLine("t", "x", "y", "z", "v", "a");
 
-        for (int t = 0; t <= 20 * (int)(1 / dt); t++)
+        int lastTickG1 = 0; //last tick where velocity was greater than one
+
+        for (int t = 0; t <= 20 * (int)(1 / dt); t++) // 20 is abitrary, but worked out
         {
             //calculate acceleration from spring (Hooke's law)
             double dMag = Math.Sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z); //magnitude of position vector which happens to be the displacement vector since spring is anchored at origin
@@ -112,11 +118,18 @@ class ProjectileMotion
                 v.y += aTotal.y * dt;
                 v.z += aTotal.z * dt;
 
+                if (Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z) >= 1)
+                {
+                    lastTickG1 = t;
+                }
+
                 pos.x += v.x * dt;
                 pos.y += v.y * dt;
                 pos.z += v.z * dt;
             }
             logger.WriteLine(t * dt, pos.x, pos.y, pos.z, Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z), Math.Sqrt(aTotal.x * aTotal.x + aTotal.y * aTotal.y + aTotal.z * aTotal.z));
         }
+
+        logger.WriteLine($"last time above 20 was {lastTickG1 * dt}");
     }
 }
