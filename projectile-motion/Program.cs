@@ -8,7 +8,7 @@ class ProjectileMotion
 
     static void Main(string[] args)
     {
-        LevelThree();
+        LevelTwo();
     }
 
     static void LevelOne()
@@ -17,7 +17,7 @@ class ProjectileMotion
 
         const double _m = 3.0;
         const double theta = 45.0 * (Math.PI / 180.0);
-        const double v0 = 3.0;
+        const double v0 = 4.0;
 
         var v = (x: v0 * Math.Cos(theta), z: v0 * Math.Sin(theta));
         var pos = (x: 0.0, z: 0.0);
@@ -57,21 +57,8 @@ class ProjectileMotion
         int t = 0; //ticks
         while (pos.z >= 0)
         {
-            double vTotal = Math.Sqrt(v.x * v.x + v.z * v.z);
-            double dragAccel = C * vTotal * vTotal / m;
-
-            //calculate drag angle and normalize to [0,2pi)
-            double dragTheta = Math.Atan2(v.z, v.x) + Math.PI;
-            if (dragTheta < 0)
-            {
-                dragTheta += 2 * Math.PI;
-            }
-            else if (dragTheta >= 2 * Math.PI)
-            {
-                dragTheta -= 2 * Math.PI;
-            }
-
-            var a = (x: dragAccel * Math.Cos(dragTheta), z: dragAccel * Math.Sin(dragTheta) - g); //calculate acceleration on each direction
+            double vTotal = Math.Sqrt(v.x * v.x + v.z * v.z);          
+            var a = (x: -C * vTotal * v.x / m, z: -C * vTotal * v.z / m - g); //calculate acceleration on each direction
 
             if (t > 0)
             {
