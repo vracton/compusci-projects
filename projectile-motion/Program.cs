@@ -8,7 +8,7 @@ class ProjectileMotion
 
     static void Main(string[] args)
     {
-        LevelTwo();
+        LevelThree();
     }
 
     static void LevelOne()
@@ -94,9 +94,10 @@ class ProjectileMotion
             //calculate acceleration from spring (Hooke's law)
             double dMag = Math.Sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z); //magnitude of position vector which happens to be the displacement vector since spring is anchored at origin
             var dUV = (x: pos.x / dMag, y: pos.y / dMag, z: pos.z / dMag); //displacement unit vector
-            var aSpring = (x: -k * (dMag - 3.0) * dUV.x, y: -k * (dMag - 3.0) * dUV.y, z: -k * (dMag - 3.0) * dUV.z);
+            var aSpring = (x: -k * (dMag - 3.0) * dUV.x / m, y: -k * (dMag - 3.0) * dUV.y / m, z: -k * (dMag - 3.0) * dUV.z / m);
 
-            var aDrag = (x: -C * v.x * Math.Abs(v.x) / m, y: -C * v.y * Math.Abs(v.y) / m, z: -C * v.z * Math.Abs(v.z) / m);
+            var vTotal = Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+            var aDrag = (x: -C * v.x * vTotal / m, y: -C * v.y * vTotal / m, z: -C * v.z * vTotal / m);
 
             var aTotal = (x: aDrag.x + aSpring.x, y: aDrag.y + aSpring.y, z: aDrag.z + aSpring.z - g);
             if (t > 0)
@@ -117,6 +118,6 @@ class ProjectileMotion
             logger.WriteLine(t * dt, pos.x, pos.y, pos.z, Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z), Math.Sqrt(aTotal.x * aTotal.x + aTotal.y * aTotal.y + aTotal.z * aTotal.z));
         }
 
-        logger.WriteLine($"last time above 20 was {lastTickG1 * dt}");
+        logger.WriteLine($"last time above 1 m/s was {lastTickG1 * dt}");
     }
 }
