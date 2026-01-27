@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Logger.cs" Link="Logger.cs" />
+	  <Compile Include="..\Logger.cs" Link="Logger.cs" />
+	  <Compile Include="..\Vector.cs" Link="Vector.cs" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using Logging;
+﻿using Helpers;
 using System.IO;
 
 class ProjectileMotion
@@ -19,23 +19,22 @@ class ProjectileMotion
         const double theta = 45.0 * (Math.PI / 180.0);
         const double v0 = 4.0;
 
-        var v = (x: v0 * Math.Cos(theta), z: v0 * Math.Sin(theta));
-        var pos = (x: 0.0, z: 0.0);
+        var v = new Vector(v0 * Math.Cos(theta), 0, v0 * Math.Sin(theta));
+        var pos = new Vector();
 
         const double dt = 0.01;
         logger.WriteLine("t", "x", "z", "v", "a");
 
         int t = 0;
-        while (pos.z >= 0.0)
+        while (pos.Z >= 0.0)
         {
             if (t > 0)
             {
-                v.z += -g * dt;
+                v.Z += -g * dt;
 
-                pos.x += v.x * dt;
-                pos.z += v.z * dt;
+                pos += v * dt;
             }
-            logger.WriteLine((t * dt), pos.x, pos.z, Math.Sqrt(v.x * v.x + v.z * v.z), g); //auto-rounds to 3 places
+            logger.WriteLine((t * dt), pos.X, pos.Z, v.Magnitude, g); //auto-rounds to 3 places
             t++;
         }
     }
@@ -48,27 +47,25 @@ class ProjectileMotion
         const double theta = 45.0 * (Math.PI / 180.0);
         const double v0 = 4.0;
 
-        var v = (x: v0 * Math.Cos(theta), z: v0 * Math.Sin(theta));
-        var pos = (x: 0.0, z: 0.0);
+        var v = new Vector(v0 * Math.Cos(theta), 0.0, v0 * Math.Sin(theta));
+        var pos = new Vector();
 
         const double dt = 0.01;
         logger.WriteLine("t", "x", "z", "v", "a");
 
         int t = 0; //ticks
-        while (pos.z >= 0)
+        while (pos.Z >= 0)
         {
-            double vTotal = Math.Sqrt(v.x * v.x + v.z * v.z);          
-            var a = (x: -C * vTotal * v.x / m, z: -C * vTotal * v.z / m - g); //calculate acceleration on each direction
+            double vTotal = v.Magnitude;          
+            var a = -C * vTotal * v / m + new Vector(0.0, 0.0, -g); //calculate acceleration on each direction
 
             if (t > 0)
             {
-                v.x += a.x * dt;
-                v.z += a.z * dt;
+                v += a * dt;
 
-                pos.x += v.x * dt;
-                pos.z += v.z * dt;
+                pos += v * dt;
             }
-            logger.WriteLine(t * dt, pos.x, pos.z, Math.Sqrt(v.x * v.x + v.z * v.z), Math.Sqrt(a.x * a.x + a.z * a.z));
+            logger.WriteLine(t * dt, pos.X, pos.Z, v.Magnitude, a.Magnitude);
             t++;
         }
     }
@@ -81,8 +78,8 @@ class ProjectileMotion
         const double k = 9.0;
         const double L = 3.0;
 
-        var pos = (x: -1.0, y: 1.0, z: -3.0);
-        var v = (x: 5.0, y: -1.0, z: -3.0);
+        var pos = new Vector(-1.0, 1.0, -3.0);
+        var v = new Vector(5.0, -1.0, -3.0);
 
         const double dt = 0.01;
         logger.WriteLine("t", "x", "y", "z", "v", "a");
@@ -92,30 +89,26 @@ class ProjectileMotion
         for (int t = 0; t <= 20 * (int)(1 / dt); t++) // 20 is abitrary, but worked out
         {
             //calculate acceleration from spring (Hooke's law)
-            double dMag = Math.Sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z); //magnitude of position vector which happens to be the displacement vector since spring is anchored at origin
-            var dUV = (x: pos.x / dMag, y: pos.y / dMag, z: pos.z / dMag); //displacement unit vector
-            var aSpring = (x: -k * (dMag - 3.0) * dUV.x / m, y: -k * (dMag - 3.0) * dUV.y / m, z: -k * (dMag - 3.0) * dUV.z / m);
+            double dMag = pos.Magnitude; //magnitude of position vector which happens to be the displacement vector since spring is anchored at origin
+            var dUV = pos.UnitVector; //displacement unit vector
+            var aSpring = -k * (dMag - 3.0) * dUV / m;
 
-            var vTotal = Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-            var aDrag = (x: -C * v.x * vTotal / m, y: -C * v.y * vTotal / m, z: -C * v.z * vTotal / m);
+            var vTotal = v.Magnitude;
+            var aDrag = -C * v * vTotal / m;
 
-            var aTotal = (x: aDrag.x + aSpring.x, y: aDrag.y + aSpring.y, z: aDrag.z + aSpring.z - g);
+            var aTotal = aDrag + aSpring + new Vector(0, 0, -g);
             if (t > 0)
             {
-                v.x += aTotal.x * dt;
-                v.y += aTotal.y * dt;
-                v.z += aTotal.z * dt;
+                v += aTotal * dt;
 
-                if (Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z) >= 1)
+                if (v.Magnitude >= 1)
                 {
                     lastTickG1 = t;
                 }
 
-                pos.x += v.x * dt;
-                pos.y += v.y * dt;
-                pos.z += v.z * dt;
+                pos += v * dt;
             }
-            logger.WriteLine(t * dt, pos.x, pos.y, pos.z, Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z), Math.Sqrt(aTotal.x * aTotal.x + aTotal.y * aTotal.y + aTotal.z * aTotal.z));
+            logger.WriteLine(t * dt, pos, v.Magnitude, aTotal.Magnitude);
         }
 
         logger.WriteLine($"last time above 1 m/s was {lastTickG1 * dt}");

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Logging
+namespace Helpers
 {
     class Logger
     {
@@ -29,6 +29,11 @@ namespace Logging
                 {
                     logToConsole += ((double)o).ToString("F3") + "\t";
                     logToFile += ((double)o).ToString("F3") + " ";
+                }
+                else if (o is Vector)
+                {
+                    logToConsole += ((Vector)o).Tableized("F3") + "\t";
+                    logToFile += ((Vector)o).Spaced("F3") + " ";
                 }
                 else
                 {
