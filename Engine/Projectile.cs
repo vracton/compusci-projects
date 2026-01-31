@@ -26,7 +26,7 @@ namespace Engine
 
         public void ApplyForce(Force force)
         {
-            Acceleration += force.CalculateForce(this);
+            Acceleration += force.CalculateForce(this) / Mass;
         }
 
         public void Tick(double dt)
