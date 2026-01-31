@@ -1,8 +1,6 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="Logger.cs" />
-    <File Path="Vector.cs" />
-  </Folder>
+  <Project Path="Engine/Engine.csproj" />
+  <Project Path="Helpers/Helpers.csproj" Id="e75e4617-b57d-438f-b9f6-1f6dc48eac6b" />
   <Project Path="kinematics/kinematics.csproj" Id="75861fd4-c8a0-4d1a-b25f-293891b5916f" />
   <Project Path="projectile-motion/projectile-motion.csproj" Id="a1051cd1-3a9b-49f3-afc2-5fa9889a2879" />
 </Solution>
