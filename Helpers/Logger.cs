@@ -2,7 +2,7 @@
 
 namespace Helpers
 {
-    class Logger
+    public class Logger
     {
         private readonly string filePath;
 
