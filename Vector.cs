@@ -39,7 +39,7 @@ namespace Helpers
 
 		static public Vector operator -(Vector a)
 		{
-			return new Vector() - a;
+			return new Vector() - a; //0 vector minus a
 		}
 
 		static public Vector operator *(Vector a, double x)
@@ -52,12 +52,17 @@ namespace Helpers
 			return a * x;
 		}
 
-		static public Vector operator /(Vector a, double x)
-		{
-			return new Vector(a.X / x, a.Y / x, a.Z / x);
-		}
+        static public Vector operator /(Vector a, double x)
+        {
+            return new Vector(a.X / x, a.Y / x, a.Z / x);
+        }
 
-		public double Dot(Vector b)
+        static public Vector operator /(double x, Vector a)
+        {
+            return new Vector(x / a.X, x / a.Y, x / a.Z);
+        }
+
+        public double Dot(Vector b)
 		{
 			return this.X * b.X + this.Y * b.Y + this.Z * b.Z;
 		}
