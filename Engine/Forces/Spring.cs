@@ -1,4 +1,5 @@
 ﻿using Helpers;
+using Engine.Core;
 
 namespace Engine.Forces
 {
@@ -18,7 +19,7 @@ namespace Engine.Forces
         public override Vector CalculateForce(Projectile projectile)
         {
             Vector displacement = Anchor - projectile.Position;
-            return -k * (displacement.Magnitude - RestLength) * displacement.UnitVector;
+            return -k * (displacement.Magnitude - RestLength) * projectile.Position.UnitVector;
         }
     }
 }
