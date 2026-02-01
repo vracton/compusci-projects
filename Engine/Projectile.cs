@@ -1,7 +1,7 @@
 ﻿using Helpers;
 using Engine.Forces;
 
-namespace Engine
+namespace Engine.Core
 {
     public class Projectile
     {

@@ -1,14 +1,15 @@
 ﻿using Engine.Forces;
+using System.Runtime.CompilerServices;
 
-namespace Engine
+namespace Engine.Core
 {
-    public class Engine
+    public class World
     {
         public double Time { get; private set; }
         public List<Projectile> Projectiles { get; private set; }
         public List<Force> Forces { get; private set; }
 
-        public Engine()
+        public World()
         {
             Time = 0;
             Projectiles = [];
@@ -25,17 +26,23 @@ namespace Engine
             Forces.Add(force);
         }
 
-        public void AddProjectiles(Projectile[] projectiles)
+        public void AddProjectiles(params Projectile[] projectiles)
         {
-            Projectiles.AddRange(projectiles);
+            foreach (var projectile in projectiles)
+            {
+                this.AddProjectile(projectile);
+            }
         }
 
-        public void AddForces(Force[] forces)
+        public void AddForces(params Force[] forces)
         {
-            Forces.AddRange(forces);
+            foreach (var force in forces)
+            {
+                this.AddForce(force);
+            }
         }
 
-        public void Update(double deltaTime)
+        public void Tick(double deltaTime, Action? logFunc = null)
         {
             foreach (var projectile in Projectiles)
             {
@@ -45,12 +52,11 @@ namespace Engine
                 }
             }
 
+            logFunc?.Invoke();
+
             foreach (var projectile in Projectiles)
             {
-                if (Time > 0)
-                {
-                    projectile.Tick(deltaTime);
-                }
+                projectile.Tick(deltaTime);
             }
             Time += deltaTime;
         }
