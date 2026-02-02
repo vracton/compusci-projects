@@ -59,6 +59,7 @@ namespace Engine.Core
                 projectile.Tick(deltaTime);
             }
             Time += deltaTime;
+            Forces.Clear();
         }
     }
 }
