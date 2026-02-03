@@ -26,6 +26,7 @@ namespace Engine.Core
             Forces.Add(force);
         }
 
+        //multi adds call normal add methods in case we need to do any processing in the future
         public void AddProjectiles(params Projectile[] projectiles)
         {
             foreach (var projectile in projectiles)
@@ -44,6 +45,7 @@ namespace Engine.Core
 
         public void Tick(double deltaTime, Action? logFunc = null)
         {
+            //calculate all forces first and then update projectiles simultaneously
             foreach (var projectile in Projectiles)
             {
                 foreach (var force in Forces)
@@ -52,12 +54,13 @@ namespace Engine.Core
                 }
             }
 
-            logFunc?.Invoke();
+            logFunc?.Invoke(); //log after forces applied before projectiles updated
 
             foreach (var projectile in Projectiles)
             {
                 projectile.Tick(deltaTime);
             }
+
             Time += deltaTime;
             Forces.Clear();
         }
