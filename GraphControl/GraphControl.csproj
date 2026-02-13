@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DongUtility\DongUtility.csproj" />
+    <ProjectReference Include="..\GraphData\GraphData.csproj" />
+    <ProjectReference Include="..\WPFUtility\WPFUtility.csproj" />
+  </ItemGroup>
+
+</Project>
