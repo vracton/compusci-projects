@@ -1,0 +1,21 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Framework/">
+    <Project Path="DongUtility/DongUtility.csproj" />
+    <Project Path="Geometry/Geometry.csproj" />
+    <Project Path="GraphControl/GraphControl.csproj" />
+    <Project Path="GraphData/GraphData.csproj" />
+    <Project Path="MotionVisualizer/MotionVisualizer.csproj" />
+    <Project Path="MotionVisualizer3D/MotionVisualizer3D.csproj" />
+    <Project Path="PhysicsUtility/PhysicsUtility.csproj" />
+    <Project Path="Visualizer3DCore/Visualizer3DCore.vcxproj" />
+    <Project Path="VisualizerBaseClasses/VisualizerBaseClasses.csproj" />
+    <Project Path="VisualizerControl/VisualizerControl.csproj" />
+    <Project Path="WPFUtility/WPFUtility.csproj" />
+  </Folder>
+  <Project Path="Visualizer/Visualizer.csproj" />
+</Solution>
