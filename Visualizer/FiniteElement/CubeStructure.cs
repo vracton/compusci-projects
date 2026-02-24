@@ -19,10 +19,12 @@ namespace Visualizer.FiniteElement
             double nodeSpacing = EdgeLength / (EdgeCount - 1);
             double faceDiagonalLength = nodeSpacing * Math.Sqrt(2);
             double cellBodyDiagonalLength = nodeSpacing * Math.Sqrt(3);
-            double faceDiagonalSpringConstant = springConstant * 0.8;
-            double interLayerCrossSpringConstant = springConstant * 0.6;
+            double unsimplifiedLongSpringConstant = springConstant * 1.5;
+            double faceDiagonalSpringConstant = springConstant * 0.45;
+            double interLayerCrossSpringConstant = springConstant * 0.30;
+            double cornerSpringConstant = springConstant * 0.2;
             const double minScale = 0.25;
-            const double maxScale = 1.0;
+            const double maxScale = 0.75;
 
             // Soften longer links to reduce post-impact jumbling while preserving anti-collapse structure.
             double ScaledSpringConstant(double baseSpringConstant, double connectorLength)
@@ -94,11 +96,11 @@ namespace Visualizer.FiniteElement
                     for (int z = 0; z < EdgeCount; z++)
                     {
                         if (x < 1)
-                            AddConnector(projs[x, y, z], projs[EdgeCount - 1, y, z], simplified ? springConstant * 4 : ScaledSpringConstant(springConstant * 4, EdgeLength), EdgeLength);
+                            AddConnector(projs[x, y, z], projs[EdgeCount - 1, y, z], simplified ? springConstant * 4 : ScaledSpringConstant(unsimplifiedLongSpringConstant, EdgeLength), EdgeLength);
                         if (y < 1)
-                            AddConnector(projs[x, y, z], projs[x, EdgeCount - 1, z], simplified ? springConstant * 4 : ScaledSpringConstant(springConstant * 4, EdgeLength), EdgeLength);
+                            AddConnector(projs[x, y, z], projs[x, EdgeCount - 1, z], simplified ? springConstant * 4 : ScaledSpringConstant(unsimplifiedLongSpringConstant, EdgeLength), EdgeLength);
                         if (z < 1)
-                            AddConnector(projs[x, y, z], projs[x, y, EdgeCount - 1], simplified ? springConstant * 4 : ScaledSpringConstant(springConstant * 4, EdgeLength), EdgeLength);
+                            AddConnector(projs[x, y, z], projs[x, y, EdgeCount - 1], simplified ? springConstant * 4 : ScaledSpringConstant(unsimplifiedLongSpringConstant, EdgeLength), EdgeLength);
                     }
                 }
             }
@@ -116,10 +118,10 @@ namespace Visualizer.FiniteElement
             if (!simplified)
             {
                 //connect opposite corners
-                AddConnector(projs[0, 0, 0], projs[EdgeCount - 1, EdgeCount - 1, EdgeCount - 1], ScaledSpringConstant(springConstant * 0.5, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
-                AddConnector(projs[0, 0, EdgeCount - 1], projs[EdgeCount - 1, EdgeCount - 1, 0], ScaledSpringConstant(springConstant * 0.5, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
-                AddConnector(projs[0, EdgeCount - 1, 0], projs[EdgeCount - 1, 0, EdgeCount - 1], ScaledSpringConstant(springConstant * 0.5, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
-                AddConnector(projs[0, EdgeCount - 1, EdgeCount - 1], projs[EdgeCount - 1, 0, 0], ScaledSpringConstant(springConstant * 0.5, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
+                AddConnector(projs[0, 0, 0], projs[EdgeCount - 1, EdgeCount - 1, EdgeCount - 1], ScaledSpringConstant(cornerSpringConstant, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
+                AddConnector(projs[0, 0, EdgeCount - 1], projs[EdgeCount - 1, EdgeCount - 1, 0], ScaledSpringConstant(cornerSpringConstant, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
+                AddConnector(projs[0, EdgeCount - 1, 0], projs[EdgeCount - 1, 0, EdgeCount - 1], ScaledSpringConstant(cornerSpringConstant, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
+                AddConnector(projs[0, EdgeCount - 1, EdgeCount - 1], projs[EdgeCount - 1, 0, 0], ScaledSpringConstant(cornerSpringConstant, EdgeLength * Math.Sqrt(3)), EdgeLength * Math.Sqrt(3));
 
                 //diagonal braces on all face types (XY, XZ, YZ)
                 for (int z = 0; z < EdgeCount; z++)
