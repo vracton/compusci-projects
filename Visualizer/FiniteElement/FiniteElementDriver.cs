@@ -20,7 +20,7 @@ namespace Visualizer.FiniteElement
             engine.AddForce(new GroundForce(engine));
             engine.AddForce(new AirResistanceForce(engine, .01));
 
-            const int level = 1;
+            const int level = 2;
 
             ParticleStructure ps;
 
@@ -28,9 +28,13 @@ namespace Visualizer.FiniteElement
             {
                 case 1:
                     ps = new CubeStructure(3, 1, new(0, 0, 10 + 1 / 3), new(), 5, 40);
-                    AddParticleStructure(ps, engine);
+                    break;
+                case 2:
+                    ps = new CubeStructure(3, 1, new(0, 0, 10 + 1 / 3), new(31.2, 6.7, 41.14), 5, 40, false);
                     break;
             }
+
+            AddParticleStructure(ps, engine);
 
             var adapter = new EngineAdapter(engine)
             {
@@ -59,6 +63,9 @@ namespace Visualizer.FiniteElement
             {
                 case 1:
                     fullViz.Manager.Add3DGraph("Center of Mass", () => engine.Time, () => ps.CenterOfMass, "Time (s)", "Center of Mass (m)");
+                    break;
+                case 2:
+                    fullViz.Manager.Add3DGraph("Angular Momentum", () => engine.Time, () => ps.AngularMomentum, "Time (s)", "Angular Momentum (kg·m²/s)");
                     break;
             }
             

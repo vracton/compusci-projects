@@ -30,6 +30,19 @@ namespace Visualizer.FiniteElement
             }
         }
 
+        public Vector AngularMomentum
+        {
+            get
+            {
+                Vector sum = new();
+                foreach (Projectile p in Projectiles)
+                {
+                    sum += Vector.Cross(p.Position - CenterOfMass, p.Velocity * p.Mass);
+                }
+                return sum;
+            }
+        }
+
         public Vector VelocityOfCOM
         {
             get
