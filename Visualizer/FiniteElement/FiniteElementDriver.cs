@@ -20,8 +20,17 @@ namespace Visualizer.FiniteElement
             engine.AddForce(new GroundForce(engine));
             engine.AddForce(new AirResistanceForce(engine, .01));
 
-            var ps = new YourParticleStructure();
-            AddParticleStructure(ps, engine);
+            const int level = 1;
+
+            ParticleStructure ps;
+
+            switch (level)
+            {
+                case 1:
+                    ps = new CubeStructure(3, 1, new(0, 0, 10 + 1 / 3), new(), 5, 40);
+                    AddParticleStructure(ps, engine);
+                    break;
+            }
 
             var adapter = new EngineAdapter(engine)
             {
@@ -38,13 +47,23 @@ namespace Visualizer.FiniteElement
 
             AddConnectorsToVisualizer(ps, visualization);
 
-            Timeline.MaximumPoints = 3000;
+            Timeline.MaximumPoints = 70000;
 
-            var fullViz = new MotionVisualizer3DControl(visualization);
+            var fullViz = new MotionVisualizer3DControl(visualization)
+            {
+                TimeIncrement = .0001
+            };
 
-            fullViz.Manager.Add3DGraph("Position", () => engine.Time, () => engine.Projectiles[0].Position, "Time (s)", "Position (m)");
-            fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => engine.Projectiles[0].Velocity, "Time (s)", "Velocity (m/s)");
-            fullViz.Manager.Add3DGraph("Acceleration", () => engine.Time, () => engine.Projectiles[0].Acceleration, "Time (s)", "Acceleration (m/s^2)");
+
+            switch (level)
+            {
+                case 1:
+                    fullViz.Manager.Add3DGraph("Center of Mass", () => engine.Time, () => ps.CenterOfMass, "Time (s)", "Center of Mass (m)");
+                    break;
+            }
+            
+            //fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => ps.VelocityOfCOM, "Time (s)", "Velocity (m/s)");
+            //fullViz.Manager.Add3DGraph("Acceleration", () => engine.Time, () => ps.AccelOfCOM, "Time (s)", "Acceleration (m/s^2)");
 
             fullViz.Show();
         }
