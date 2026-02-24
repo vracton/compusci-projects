@@ -15,7 +15,7 @@ namespace Visualizer.MarbleMadness
             const double eachMass = .1; //.005 / 27;
             const double springConstant = 500;
             const double side = .01;
-            const int nParticles = 1;
+            const int nParticles = 3;
             const double initialHeight = .5;
 
             Projectile[,,] projectiles = new Projectile[nParticles, nParticles, nParticles];

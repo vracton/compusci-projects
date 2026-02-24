@@ -18,6 +18,7 @@ namespace Visualizer.MarbleMadness
         {
             var engine = new KinematicsEngine();
             engine.AddForce(new ConstantGravitationForce(engine, new Vector(0, 0, -9.8)));
+            engine.AddStopCondition(new CubeExitStopCondition(0.5));
 
             var ps = new YourParticleStructure();
             var surfaces = new YOURNAMEMarbleMachine();
@@ -27,7 +28,7 @@ namespace Visualizer.MarbleMadness
 
             var adapter = new EngineAdapter(engine)
             {
-                ParticleSize = .01
+                ParticleSize = .001
             };
 
             var visualization = new MarbleMadnessVisualization(adapter)
@@ -47,10 +48,15 @@ namespace Visualizer.MarbleMadness
             fullViz.Manager.Add3DGraph("Position", () => engine.Time, () => engine.Projectiles[0].Position, "Time (s)", "Position (m)");
             fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => engine.Projectiles[0].Velocity, "Time (s)", "Velocity (m/s)");
             fullViz.Manager.Add3DGraph("Acceleration", () => engine.Time, () => engine.Projectiles[0].Acceleration, "Time (s)", "Acceleration (m/s^2)");
+            fullViz.Manager.AddText("Current position", System.Drawing.Color.Crimson, () => PositionText(engine.Projectiles[0].Position));
 
             fullViz.Show();
         }
 
+        private static string PositionText(Vector position)
+        {
+            return $"X: {position.X:F3} Y: {position.Y:F3} Z: {position.Z:F3}";
+        }
         private static void AddSurfacesToVisualizer(MarbleMachine surfaces, MarbleMadnessVisualization visualization)
         {
             foreach (var surface in surfaces.Surfaces)
