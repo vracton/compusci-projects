@@ -5,6 +5,7 @@ using MotionVisualizer3D;
 using PhysicsUtility.Kinematics;
 using PhysicsUtility.Kinematics.Forces;
 using Visualizer.Kinematics;
+using Windows.ApplicationModel.Calls;
 
 namespace Visualizer.FiniteElement
 {
@@ -15,12 +16,17 @@ namespace Visualizer.FiniteElement
         // In general, this script will not need changing, or only small changes
         static internal void RunFiniteElement()
         {
-            var engine = new KinematicsEngine();
+            var engine = new SpringSettlingKinematicsEngine
+            {
+                RelaxationSubsteps = 12,
+                VibrationDampingRate = 60.0,
+                PreserveCenterOfMassVelocity = true
+            };
             engine.AddForce(new ConstantGravitationForce(engine, new Vector(0, 0, -9.8)));
             engine.AddForce(new GroundForce(engine));
             engine.AddForce(new AirResistanceForce(engine, .01));
 
-            const int level = 2;
+            const int level = 3;
 
             ParticleStructure ps;
 
@@ -31,6 +37,9 @@ namespace Visualizer.FiniteElement
                     break;
                 case 2:
                     ps = new CubeStructure(3, 1, new(0, 0, 10 + 1 / 3), new(31.2, 6.7, 41.14), 5, 40, false);
+                    break;
+                case 3:
+                    ps = new CubeStructure(3, 2, new(0, 0, 10 + 1 / 3), new(61.2, 60.7, 1.14), 5, 250, false);
                     break;
             }
 
@@ -66,6 +75,13 @@ namespace Visualizer.FiniteElement
                     break;
                 case 2:
                     fullViz.Manager.Add3DGraph("Angular Momentum", () => engine.Time, () => ps.AngularMomentum, "Time (s)", "Angular Momentum (kg·m²/s)");
+                    break;
+                case 3:
+                    fullViz.Manager.Add3DGraph("Center of Mass", () => engine.Time, () => ps.CenterOfMass, "Time (s)", "Center of Mass (m)");
+                    fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => ps.VelocityOfCOM, "Time (s)", "Velocity of COM (m/s)");
+                    fullViz.Manager.Add3DGraph("Angular Momentum", () => engine.Time, () => ps.AngularMomentum, "Time (s)", "Angular Momentum (kg·m²/s)");
+                    fullViz.Manager.AddSingleGraph("Internal Vibration KE", System.Drawing.Color.DarkOrange,
+                        () => engine.Time, () => engine.InternalKineticEnergy, "Time (s)", "Internal KE (J)");
                     break;
             }
             
