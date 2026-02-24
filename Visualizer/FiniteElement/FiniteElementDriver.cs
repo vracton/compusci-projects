@@ -19,8 +19,7 @@ namespace Visualizer.FiniteElement
             var engine = new SpringSettlingKinematicsEngine
             {
                 RelaxationSubsteps = 12,
-                VibrationDampingRate = 60.0,
-                PreserveCenterOfMassVelocity = true
+                VibrationDampingRate = 60.0
             };
             engine.AddForce(new ConstantGravitationForce(engine, new Vector(0, 0, -9.8)));
             engine.AddForce(new GroundForce(engine));
@@ -84,9 +83,6 @@ namespace Visualizer.FiniteElement
                         () => engine.Time, () => engine.InternalKineticEnergy, "Time (s)", "Internal KE (J)");
                     break;
             }
-            
-            //fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => ps.VelocityOfCOM, "Time (s)", "Velocity (m/s)");
-            //fullViz.Manager.Add3DGraph("Acceleration", () => engine.Time, () => ps.AccelOfCOM, "Time (s)", "Acceleration (m/s^2)");
 
             fullViz.Show();
         }

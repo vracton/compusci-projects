@@ -33,7 +33,8 @@ namespace Visualizer.FiniteElement
             {
                 projectile.Velocity = new Vector(projectile.Velocity.X, projectile.Velocity.Y, -projectile.Velocity.Z);
             }
-
+            
+            //NEW STUFF
             Vector tangentialVelocity = new Vector(projectile.Velocity.X, projectile.Velocity.Y, 0.0);
             double tangentialSpeed = tangentialVelocity.Magnitude;
             if (tangentialSpeed > TangentialSpeedEpsilon)

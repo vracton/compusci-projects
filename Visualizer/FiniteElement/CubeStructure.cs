@@ -26,7 +26,7 @@ namespace Visualizer.FiniteElement
             const double minScale = 0.25;
             const double maxScale = 0.75;
 
-            // Soften longer links to reduce post-impact jumbling while preserving anti-collapse structure.
+            //soften longer links to reduce post-bounce jumbling
             double ScaledSpringConstant(double baseSpringConstant, double connectorLength)
             {
                 double scale = UtilityFunctions.Clamp(nodeSpacing / connectorLength, minScale, maxScale);
