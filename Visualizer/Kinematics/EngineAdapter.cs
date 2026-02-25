@@ -11,7 +11,7 @@ namespace Visualizer.Kinematics
     {
         protected KinematicsEngine Engine { get; } = engine;
         public double ParticleSize { get; set; } = .5;
-        public Color ParticleColor { get; set; } = Colors.Tomato;
+        //public Color ParticleColor { get; set; } = Colors.Tomato;
 
         public double Time => Engine.Time;
 
@@ -23,10 +23,10 @@ namespace Visualizer.Kinematics
 
                 foreach (var proj in Engine.Projectiles)
                 {
-                    var newIProjectile = new ProjectileAdapter(proj, ParticleSize)
-                    {
-                        Color = ParticleColor
-                    };
+                    var newIProjectile = new ProjectileAdapter(proj, ParticleSize);
+              //      {
+            //            Color = ParticleColor
+          //          };
                     list.Add(newIProjectile);
                     if (ProjectileMap.Count == 0)
                     {

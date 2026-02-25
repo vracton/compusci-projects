@@ -1,4 +1,5 @@
 ﻿using DongUtility;
+using System.Drawing;
 
 namespace PhysicsUtility.Kinematics
 {
@@ -11,6 +12,7 @@ namespace PhysicsUtility.Kinematics
         public Vector Velocity { get; set; } = velocity;
         public Vector Acceleration { get; protected set; } = Vector.NullVector();
         public Vector NetForce { get; protected set; } = Vector.NullVector();
+        public Color Color { get; set; } = Color.Red;
 
         public double Mass
         {

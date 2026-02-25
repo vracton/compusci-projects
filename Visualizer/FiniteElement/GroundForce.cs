@@ -7,6 +7,10 @@ namespace Visualizer.FiniteElement
     // A quick and dirty way to get simple behavior at the ground
     public class GroundForce(KinematicsEngine engine) : GlobalForce(engine)
     {
+        private const double MuSlide = 100.0;
+        private const double GravityMagnitude = 9.8;
+        private const double TangentialSpeedEpsilon = 1e-12;
+
         /// <summary>
         /// The condition that must be met for the force to "turn on"
         /// Otherwise, nothing happens
@@ -18,13 +22,27 @@ namespace Visualizer.FiniteElement
 
         override protected Vector GetForce(Projectile projectile)
         {
+            if (!ConditionMet(projectile))
+            {
+                return Vector.NullVector();
+            }
+
             Vector response = Vector.NullVector();
 
-            if (ConditionMet(projectile))
+            if (projectile.Velocity.Z < 0)
             {
-                if (projectile.Velocity.Z < 0)
-                    projectile.Velocity = new Vector(projectile.Velocity.X, projectile.Velocity.Y, -projectile.Velocity.Z);
+                projectile.Velocity = new Vector(projectile.Velocity.X, projectile.Velocity.Y, -projectile.Velocity.Z);
             }
+            
+            //NEW STUFF
+            Vector tangentialVelocity = new Vector(projectile.Velocity.X, projectile.Velocity.Y, 0.0);
+            double tangentialSpeed = tangentialVelocity.Magnitude;
+            if (tangentialSpeed > TangentialSpeedEpsilon)
+            {
+                double frictionMagnitude = MuSlide * projectile.Mass * GravityMagnitude;
+                response = -(frictionMagnitude / tangentialSpeed) * tangentialVelocity;
+            }
+
             return response;
         }
     }

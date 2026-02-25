@@ -12,7 +12,7 @@ namespace Visualizer.Kinematics
     {
         public Vector3D Position => new(projectile.Position.X, projectile.Position.Y, projectile.Position.Z);
 
-        public Color Color { get; set; } = Colors.Red;
+        public Color Color { get; set; } = WPFUtility.UtilityFunctions.ConvertColor(projectile.Color);
 
         public Shape3D Shape => new Sphere3D(2);
 

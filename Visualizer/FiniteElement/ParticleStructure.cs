@@ -15,6 +15,64 @@ namespace Visualizer.FiniteElement
         public List<Projectile> Projectiles { get; } = [];
         public List<Connector> Connectors { get; } = [];
 
+        public Vector CenterOfMass
+        {
+            get
+            {
+                Vector sum = new();
+                double tMass = 0;
+                foreach (Projectile p in Projectiles)
+                {
+                    sum += p.Position * p.Mass;
+                    tMass += p.Mass;
+                }
+                return sum / tMass;
+            }
+        }
+
+        public Vector AngularMomentum
+        {
+            get
+            {
+                Vector sum = new();
+                foreach (Projectile p in Projectiles)
+                {
+                    sum += Vector.Cross(p.Position - CenterOfMass, p.Velocity * p.Mass);
+                }
+                return sum;
+            }
+        }
+
+        public Vector VelocityOfCOM
+        {
+            get
+            {
+                Vector sum = new();
+                double tMass = 0;
+                foreach (Projectile p in Projectiles)
+                {
+                    sum += p.Velocity * p.Mass;
+                    tMass += p.Mass;
+                }
+                return sum / tMass;
+            }
+        }
+
+        public Vector AccelOfCOM
+        {
+            get
+            {
+                Vector sum = new();
+                double tMass = 0;
+                foreach (Projectile p in Projectiles)
+                {
+                    sum += p.Acceleration * p.Mass;
+                    tMass += p.Mass;
+                }
+                return sum / tMass;
+            }
+        }
+
         /// <summary>
         /// Find the index of a given projectile
         /// </summary>
@@ -38,7 +96,7 @@ namespace Visualizer.FiniteElement
         /// <param name="unstretchedLength">The unstretched length of the spring</param>
         public class Connector(Projectile proj1, Projectile proj2, double springConstant, double unstretchedLength)
         {
-            public Color Color { get; set; } = Colors.Green;
+            public Color Color { get; set; } = Colors.Orange;
 
             public Projectile Projectile1 { get; set; } = proj1;
             public Projectile Projectile2 { get; set; } = proj2;
@@ -97,6 +155,5 @@ namespace Visualizer.FiniteElement
             }
             Connectors.Add(new Connector(proj1, proj2, springConstant, unstretchedLength));
         }
-
     }
 }
