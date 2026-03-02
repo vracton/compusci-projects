@@ -12,7 +12,7 @@ namespace Visualizer.MarbleMadness
     {
         public YourParticleStructure()
         {
-            const double eachMass = .1; //.005 / 27;
+            const double eachMass = .67; //.005 / 27;
             const double springConstant = 500;
             const double side = .01;
             const int nParticles = 3;
