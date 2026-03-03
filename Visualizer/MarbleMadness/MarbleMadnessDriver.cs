@@ -28,7 +28,7 @@ namespace Visualizer.MarbleMadness
 
             var adapter = new EngineAdapter(engine)
             {
-                ParticleSize = .001
+                ParticleSize = .01
             };
 
             var visualization = new MarbleMadnessVisualization(adapter)
@@ -43,7 +43,10 @@ namespace Visualizer.MarbleMadness
 
             Timeline.MaximumPoints = 3000;
 
-            var fullViz = new MotionVisualizer3DControl(visualization);
+            var fullViz = new MotionVisualizer3DControl(visualization)
+            {
+                TimeIncrement = .0001
+            };
 
             fullViz.Manager.Add3DGraph("Position", () => engine.Time, () => engine.Projectiles[0].Position, "Time (s)", "Position (m)");
             fullViz.Manager.Add3DGraph("Velocity", () => engine.Time, () => engine.Projectiles[0].Velocity, "Time (s)", "Velocity (m/s)");

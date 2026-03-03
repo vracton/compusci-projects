@@ -22,7 +22,7 @@ namespace Visualizer.MarbleMadness
                     return true;
                 }
             }
-            return false;
+            return true;
         }
     }
 }
