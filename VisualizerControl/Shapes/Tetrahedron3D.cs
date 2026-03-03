@@ -1,0 +1,16 @@
+﻿using System.Collections.Generic;
+using System.Windows.Media.Media3D;
+
+namespace VisualizerControl.Shapes
+{
+    /// <summary>
+    /// A basic tetrahedron defined by four points
+    /// </summary>
+    public class Tetrahedron3D(Vector3D point1, Vector3D point2, Vector3D point3, Vector3D point4)
+        : TriangleBasedShape3D([ new Triangle3D(point1, point2, point3),
+                new Triangle3D(point1, point2, point4),
+                new Triangle3D(point1, point3, point4),
+                new Triangle3D(point2, point3, point4)])
+    {
+    }
+}
