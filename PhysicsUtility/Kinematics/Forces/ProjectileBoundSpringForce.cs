@@ -8,12 +8,22 @@ namespace PhysicsUtility.Kinematics.Forces
     /// </summary>
     public class ProjectileBoundSpringForce(Projectile projectile1,
         Projectile projectile2, double springConstant,
-        double unstretchedLength = 0) 
+        double unstretchedLength = 0, double dampingConstant = 0)
         : SpringForce(projectile1, springConstant, unstretchedLength)
     {
         protected override Vector SpringPosition()
         {
             return projectile2.Position;
+        }
+
+        protected override Vector GetForce()
+        {
+            Vector springForce = base.GetForce();
+            Vector springDirection = (Particle.Position - projectile2.Position).UnitVector();
+            Vector relativeVelocity = Particle.Velocity - projectile2.Velocity;
+            double relativeSpeedAlongSpring = Vector.Dot(relativeVelocity, springDirection);
+            Vector dampingForce = -dampingConstant * relativeSpeedAlongSpring * springDirection;
+            return springForce + dampingForce;
         }
     }
 }

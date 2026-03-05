@@ -15,36 +15,36 @@ namespace Visualizer.MarbleMadness
         public YourParticleStructure()
         {
             const double totalMass = 5;
-            Vector start = new(0, 0.45, 0.5);
-            const double s = 200.0;
+            Vector start = new(0, -0.46, 0.28);
+            const double s = 7500.0;
 
             //center
             Projectile center = new(start, new(), totalMass / 2);
             AddProjectile(center);
             //layer 2
-            //var (icoVerts1, projs1) = CreateNewSubIco(start, 1, 0.01, totalMass / 4, s);
+            var (icoVerts1, projs1) = CreateNewSubIco(start, 0, 0.01, totalMass / 4, s);
             //layer 3
-            //var (icoVerts2, projs2) = CreateNewSubIco(start, 1, 0.01, totalMass / 4, s);
+            var (icoVerts2, projs2) = CreateNewSubIco(start, 1, 0.01, totalMass / 4, s);
 
             //connect opposite pairs in layer 2
-            //for (int i = 0; i < icoVerts1.Count; i++)
-            //{
-            //    int oppIndex = icoVerts1.IndexOf(-icoVerts1[i]);
-            //    if (i > oppIndex)
-            //    {
-            //        AddConnector(projs1[i], projs1[oppIndex], s, Vector.Distance(projs1[i].Position, projs1[oppIndex].Position));
-            //    }
-            //}
+            for (int i = 0; i < icoVerts1.Count; i++)
+            {
+                int oppIndex = icoVerts1.IndexOf(-icoVerts1[i]);
+                if (oppIndex >= 0 && i > oppIndex)
+                {
+                    AddConnector(projs1[i], projs1[oppIndex], s, Vector.Distance(projs1[i].Position, projs1[oppIndex].Position));
+                }
+            }
 
             //layer connections
-            //foreach (var p in projs1)
-            //{
-            //    AddConnector(center, p, s * 2, Vector.Distance(center.Position, p.Position));
-            //}
-            //for (int i = 0; i < icoVerts1.Count; i++)
-            //{
-            //    AddConnector(projs1[i], projs2[i], s, Vector.Distance(projs1[i].Position, projs2[i].Position));
-            //}
+            foreach (var p in projs1)
+            {
+                AddConnector(center, p, s * 2, Vector.Distance(center.Position, p.Position));
+            }
+            for (int i = 0; i < icoVerts1.Count; i++)
+            {
+                AddConnector(projs1[i], projs2[i], s, Vector.Distance(projs1[i].Position, projs2[i].Position));
+            }
         }
 
         (List<Vector>, Projectile[]) CreateNewSubIco(Vector center, int divs, double radius, double mass, double springConstant)
@@ -101,11 +101,11 @@ namespace Visualizer.MarbleMadness
 
             //add projectiles + normalize on sphere
             Projectile[] projectiles = new Projectile[verts.Count];
-            foreach (var vert in verts)
+            for (int i = 0; i < verts.Count; i++)
             {
-                Vector pos = center + vert.UnitVector() * radius;
+                Vector pos = center + verts[i].UnitVector() * radius;
                 Projectile p = new(pos, new(), mass / verts.Count);
-                projectiles[verts.IndexOf(vert)] = p;
+                projectiles[i] = p;
                 AddProjectile(p);
             }
 

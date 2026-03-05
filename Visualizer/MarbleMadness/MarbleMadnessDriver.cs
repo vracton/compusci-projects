@@ -21,14 +21,14 @@ namespace Visualizer.MarbleMadness
             engine.AddStopCondition(new CubeExitStopCondition(0.5));
 
             var ps = new YourParticleStructure();
-            var surfaces = new YOURNAMEMarbleMachine();
+            var surfaces = new SonitMarbleMachine();
 
             AddParticleStructure(ps, engine);
             AddSurfaces(surfaces, engine);
 
             var adapter = new EngineAdapter(engine)
             {
-                ParticleSize = .01
+                ParticleSize = .001
             };
 
             var visualization = new MarbleMadnessVisualization(adapter)
@@ -86,6 +86,8 @@ namespace Visualizer.MarbleMadness
 
         static private void AddParticleStructure(ParticleStructure ps, KinematicsEngine engine)
         {
+            const double springDampingConstant = 30.0;
+
             // Add projectiles
             foreach (var projectile in ps.Projectiles)
             {
@@ -96,8 +98,8 @@ namespace Visualizer.MarbleMadness
             foreach (var connector in ps.Connectors)
             {
                 // Remember to connect it both ways
-                engine.AddForce(new ProjectileBoundSpringForce(connector.Projectile1, connector.Projectile2, connector.SpringConstant, connector.UnstretchedLength));
-                engine.AddForce(new ProjectileBoundSpringForce(connector.Projectile2, connector.Projectile1, connector.SpringConstant, connector.UnstretchedLength));
+                engine.AddForce(new ProjectileBoundSpringForce(connector.Projectile1, connector.Projectile2, connector.SpringConstant, connector.UnstretchedLength, springDampingConstant));
+                engine.AddForce(new ProjectileBoundSpringForce(connector.Projectile2, connector.Projectile1, connector.SpringConstant, connector.UnstretchedLength, springDampingConstant));
             }
         }
 
