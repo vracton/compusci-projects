@@ -52,7 +52,7 @@ namespace Visualizer.MarbleMadness
             if (!Vector.SameDirection(predictedVelocityParallel, parallelVelocity))
             {
                 // Instead, just apply enough force to stop it
-                return ForceToStop(predictedVelocityParallel, projectile.Mass);
+                return ForceToStop(projectile, predictedVelocityParallel);
             }
             else
             {
@@ -61,13 +61,20 @@ namespace Visualizer.MarbleMadness
         }
 
         /// <summary>
-        /// The amount of force needed to stop a projectile moving at a given velocity
+        /// The amount of force needed to stop a projectile moving at a given velocity.
+        /// If the projectile is currently below a surface, this instead returns the force
+        /// needed to place it just above that surface.
         /// </summary>
-        private Vector ForceToStop(Vector velocity, double mass)
+        private Vector ForceToStop(Projectile projectile, Vector velocity)
         {
+            if (TryGetAboveSurfaceTarget(projectile, out Vector pushUpTarget))
+            {
+                return AdjustForceForPosition(projectile, pushUpTarget);
+            }
+
             Vector deltaV = -velocity;
             Vector acceleration = deltaV / DeltaTime;
-            return mass * acceleration;
+            return projectile.Mass * acceleration;
         }
 
 
@@ -227,6 +234,65 @@ namespace Visualizer.MarbleMadness
             return finalForce;
         }
 
+        /// <summary>
+        /// If a projectile is below any surface triangle, returns a target position just above the deepest one.
+        /// </summary>
+        private bool TryGetAboveSurfaceTarget(Projectile projectile, out Vector target)
+        {
+            const double clearance = 1e-5;
+            const double minUpwardNormalZ = 0.2;
+            const double maxPushPerStep = 5e-4;
+
+            bool found = false;
+            double maxPushDistance = 0;
+            Vector bestNormal = Vector.NullVector();
+            target = Vector.NullVector();
+
+            foreach (var surface in surfaces)
+                foreach (var triangle in surface.Triangles)
+                {
+                    var currentPoint = new Geometry.Geometry3D.Point(projectile.Position.X, projectile.Position.Y, projectile.Position.Z);
+                    var projectedPoint = triangle.UnderlyingGeometry.ContainingPlane.NearestPoint(currentPoint);
+                    if (!triangle.UnderlyingGeometry.IsInside(projectedPoint))
+                    {
+                        continue;
+                    }
+
+                    Vector normal = triangle.Normal.UnitVector();
+                    if (normal.Z < 0)
+                    {
+                        normal = -normal;
+                    }
+                    if (normal.Z < minUpwardNormalZ)
+                    {
+                        continue;
+                    }
+
+                    Vector fromSurfaceToParticle = projectile.Position - projectedPoint.PositionVector();
+                    double signedDistance = Vector.Dot(fromSurfaceToParticle, normal);
+                    if (signedDistance >= clearance)
+                    {
+                        continue;
+                    }
+
+                    double pushDistance = clearance - signedDistance;
+                    if (pushDistance > maxPushDistance)
+                    {
+                        maxPushDistance = pushDistance;
+                        bestNormal = normal;
+                        found = true;
+                    }
+                }
+
+            if (found)
+            {
+                double clampedPushDistance = Math.Min(maxPushDistance, maxPushPerStep);
+                target = projectile.Position + clampedPushDistance * bestNormal;
+            }
+
+            return found;
+        }
+
         override protected Vector GetForce(Projectile projectile)
         {
             Vector force = CheckAndGetForce(projectile);
@@ -239,6 +305,12 @@ namespace Visualizer.MarbleMadness
                 if (IntersectsATriangle(projectile.Position, tryAgain))
                     force = LastDitchAttemptToFixForce(projectile, force);
             }
+
+            if (TryGetAboveSurfaceTarget(projectile, out Vector pushUpTarget))
+            {
+                force = AdjustForceForPosition(projectile, pushUpTarget);
+            }
+
             return force;
         }
 
