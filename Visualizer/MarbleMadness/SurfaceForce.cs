@@ -242,6 +242,7 @@ namespace Visualizer.MarbleMadness
             const double clearance = 1e-5;
             const double minUpwardNormalZ = 0.2;
             const double maxPushPerStep = 5e-4;
+            const double maxRecoveryDepth = 5e-4;
 
             bool found = false;
             double maxPushDistance = 0;
@@ -270,12 +271,18 @@ namespace Visualizer.MarbleMadness
 
                     Vector fromSurfaceToParticle = projectile.Position - projectedPoint.PositionVector();
                     double signedDistance = Vector.Dot(fromSurfaceToParticle, normal);
-                    if (signedDistance >= clearance)
+                    if (signedDistance >= 0)
                     {
                         continue;
                     }
 
-                    double pushDistance = clearance - signedDistance;
+                    double penetrationDepth = -signedDistance;
+                    if (penetrationDepth > maxRecoveryDepth)
+                    {
+                        continue;
+                    }
+
+                    double pushDistance = clearance + penetrationDepth;
                     if (pushDistance > maxPushDistance)
                     {
                         maxPushDistance = pushDistance;
