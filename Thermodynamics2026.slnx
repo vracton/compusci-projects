@@ -12,7 +12,7 @@
     <Project Path="MotionVisualizer/MotionVisualizer.csproj" />
     <Project Path="MotionVisualizer3D/MotionVisualizer3D.csproj" />
     <Project Path="PhysicsUtility/PhysicsUtility.csproj" />
-    <Project Path="Visualizer3DCore/Visualizer3DCore.vcxproj" />
+    <Project Path="Visualizer3DCore/Visualizer3DCore.vcxproj" Id="be5d57dd-0d9d-47a7-bb81-fd618cea48d9" />
     <Project Path="VisualizerBaseClasses/VisualizerBaseClasses.csproj" />
     <Project Path="VisualizerControl/VisualizerControl.csproj" />
     <Project Path="WPFUtility/WPFUtility.csproj" />
