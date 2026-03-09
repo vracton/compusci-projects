@@ -27,7 +27,12 @@ namespace Visualizer.Thermodynamics
 
             var cont = new ParticleContainer(containerSize);
             var info = new ParticleInfo(name, mass, ConvertColor(color));
-            var generator = new FlatGenerator(cont, minSpeed, maxSpeed);
+            
+            //level 1
+            //var generator = new FlatGenerator(cont, minSpeed, maxSpeed);
+
+            //level 2
+            var generator = new MaxBoltzGenerator(cont, 273.15);
 
             cont.Dictionary.AddParticle(info);
             cont.AddRandomParticles(generator, name, nParticles);
@@ -45,9 +50,9 @@ namespace Visualizer.Thermodynamics
 
             const int histogramBins = 50;
             
-            viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => cont.Temperature, "Time (s)", "Temperature (K)");
+            //viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => cont.Temperature, "Time (s)", "Temperature (K)");
             viz.Manager.AddHist(histogramBins, ConvertColor(Colors.BlueViolet), () => cont.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
-            //viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString());
+            viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString());
 
             viz.Show();
         }
