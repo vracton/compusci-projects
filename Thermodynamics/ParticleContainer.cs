@@ -30,6 +30,21 @@ namespace Thermodynamics
         /// </summary>
         static protected Random Random { get { return RandomGenerator.RandomGen; } }
 
+        private const double boltzmannConstant = 1.38e-23;
+
+        public double Temperature {
+            get
+            {
+                double KESum = 0;
+                foreach (Molecule part in Particles)
+                {
+                    KESum += 0.5 * part.Mass * part.Velocity.MagnitudeSquared;
+                }
+                KESum /= Particles.Count;
+                return KESum * 2.0 / (3.0 * boltzmannConstant);
+            }
+        }
+
         public ParticleContainer(double size) :
             this(size, size, size)
         { }
