@@ -14,7 +14,7 @@ namespace Thermodynamics
         private const string HydrochloricAcidName = "HCl";
         private const string AmmoniumChlorideName = "NH4Cl";
         private const double reactionRadius = 2.5;
-        private const double exothermicEnergy = 2.927530375427492e-19;
+        private const double exothermicEnergy = 2.9e-19;
 
         /// <summary>
         /// The size of the container
@@ -39,7 +39,6 @@ namespace Thermodynamics
         private const double boltzmannConstant = 1.38e-23;
         private readonly Dictionary<(int x, int y, int z), List<Molecule>> spatialHash = [];
         private readonly HashSet<Molecule> reactedParticles = [];
-        private double thermalLeftovers; //leftover energy (exothermic + extra)
 
         public double Temperature {
             get
@@ -54,7 +53,7 @@ namespace Thermodynamics
                 {
                     KESum += 0.5 * part.Mass * part.Velocity.MagnitudeSquared;
                 }
-                return ((KESum + thermalLeftovers) / Particles.Count) * 2.0 / (3.0 * boltzmannConstant);
+                return (KESum / Particles.Count) * 2.0 / (3.0 * boltzmannConstant);
             }
         }
 
@@ -347,15 +346,14 @@ namespace Thermodynamics
             RemoveParticle(first);
             RemoveParticle(second);
 
-            //make sure to converve momentum (and thus energy, i believe)
+            //put the released energy directly into the product's translational motion
             double totalMass = first.Mass + second.Mass;
             Vector position = (first.Mass * first.Position + second.Mass * second.Position) / totalMass;
             Vector momentum = first.Momentum + second.Momentum;
-            Vector velocity = momentum / productInfo.Mass;
-            //keep track of remaining energy
-            double reactantEnergy = first.KineticEnergy + second.KineticEnergy + exothermicEnergy;
-            double productKineticEnergy = 0.5 * productInfo.Mass * velocity.MagnitudeSquared;
-            thermalLeftovers += reactantEnergy - productKineticEnergy;
+            double productKineticEnergy = first.KineticEnergy + second.KineticEnergy + exothermicEnergy;
+            double productSpeed = Math.Sqrt(2.0 * productKineticEnergy / productInfo.Mass);
+            Vector direction = momentum.IsNull ? Vector.RandomDirection(1, Random) : momentum.UnitVector();
+            Vector velocity = direction * productSpeed;
 
             AddParticle(Dictionary.MakeParticle(position, velocity, AmmoniumChlorideName));
         }

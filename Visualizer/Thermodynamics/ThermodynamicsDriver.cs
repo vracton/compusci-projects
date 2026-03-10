@@ -42,31 +42,31 @@ namespace Visualizer.Thermodynamics
             //double temp = 273.15;
 
             // level 3
-            //const int particlesPerReactant = 500;
-            //const double deltaTime = 2.5e-4;
-            //const double temp = 300;
+            const int particlesPerReactant = 500;
+            const double deltaTime = 2.5e-4;
+            const double temp = 298.15; //25C
 
             // level 4
-            const int nParticles = 2500;
-            const double deltaTime = 0.01;
-            const double temp = 300;
-            const ReactionOrder order = ReactionOrder.ZeroOrder;
-            //const ReactionOrder order = ReactionOrder.FirstOrder;
+            //const int nParticles = 2500;
+            //const double deltaTime = 0.01;
+            //const double temp = 300;
+            ////const ReactionOrder order = ReactionOrder.ZeroOrder;
+            ////const ReactionOrder order = ReactionOrder.FirstOrder;
             //const ReactionOrder order = ReactionOrder.SecondOrder;
 
-            double rateConstant = order switch
-            {
-                ReactionOrder.ZeroOrder => 0.15,
-                ReactionOrder.FirstOrder => 0.35,
-                ReactionOrder.SecondOrder => 0.9,
-                _ => 0.0
-            };
+            //double rateConstant = order switch
+            //{
+            //    ReactionOrder.ZeroOrder => 0.15,
+            //    ReactionOrder.FirstOrder => 0.35,
+            //    ReactionOrder.SecondOrder => 0.9,
+            //    _ => 0.0
+            //};
 
             // level 1 / 2 / 3
-            //var cont = new ParticleContainer(containerSize);
+            var cont = new ParticleContainer(containerSize);
 
             // level 4
-            var cont = new RateLawParticleContainer(containerSize, order, rateConstant, ReactantName, ProductName);
+            //var cont = new RateLawParticleContainer(containerSize, order, rateConstant, ReactantName, ProductName);
 
             // level 1
             //var info = new ParticleInfo(name, mass, ConvertColor(color));
@@ -76,13 +76,13 @@ namespace Visualizer.Thermodynamics
             //var info = new ParticleInfo(name, mass, ConvertColor(color));
 
             // level 3
-            //cont.RegisterParticleType(AmmoniaName, AmmoniaMass, ConvertColor(Colors.LightSkyBlue));
-            //cont.RegisterParticleType(HydrochloricAcidName, HydrochloricAcidMass, ConvertColor(Colors.OrangeRed));
-            //cont.RegisterParticleType(AmmoniumChlorideName, AmmoniumChlorideMass, ConvertColor(Colors.Ivory));
+            cont.RegisterParticleType(AmmoniaName, AmmoniaMass, ConvertColor(Colors.LightSkyBlue));
+            cont.RegisterParticleType(HydrochloricAcidName, HydrochloricAcidMass, ConvertColor(Colors.OrangeRed));
+            cont.RegisterParticleType(AmmoniumChlorideName, AmmoniumChlorideMass, ConvertColor(Colors.Ivory));
 
             // level 4
-            cont.RegisterParticleType(ReactantName, Level4ParticleMass, ConvertColor(Colors.DodgerBlue));
-            cont.RegisterParticleType(ProductName, Level4ParticleMass, ConvertColor(Colors.Goldenrod));
+            //cont.RegisterParticleType(ReactantName, Level4ParticleMass, ConvertColor(Colors.DodgerBlue));
+            //cont.RegisterParticleType(ProductName, Level4ParticleMass, ConvertColor(Colors.Goldenrod));
 
             // level 2
             //double sum = 0.0;
@@ -102,29 +102,13 @@ namespace Visualizer.Thermodynamics
             //var generator = new MaxBoltzGenerator(cont, temp, maxX, maxY);
 
             // level 3
-            //double sum = 0.0;
-            //double maxY = 0.0;
-            //double maxX = 0;
-            //// rough estimate of max speed to consider for distribution
-            //for (int i = 0; sum <= 0.999; i += 10)
-            //{
-            //    double y = MaxBoltzGenerator.GetProb(HydrochloricAcidMass, temp, i);
-            //    if (y > maxY)
-            //    {
-            //        maxY = y;
-            //    }
-            //    sum += y * 10;
-            //    maxX = i;
-            //}
-            //var generator = new MaxBoltzGenerator(cont, temp, maxX, maxY);
-
-            // level 4
             double sum = 0.0;
             double maxY = 0.0;
-            double maxX = 0.0;
+            double maxX = 0;
+            // rough estimate of max speed to consider for distribution
             for (int i = 0; sum <= 0.999; i += 10)
             {
-                double y = MaxBoltzGenerator.GetProb(Level4ParticleMass, temp, i);
+                double y = MaxBoltzGenerator.GetProb(HydrochloricAcidMass, temp, i);
                 if (y > maxY)
                 {
                     maxY = y;
@@ -134,29 +118,45 @@ namespace Visualizer.Thermodynamics
             }
             var generator = new MaxBoltzGenerator(cont, temp, maxX, maxY);
 
+            // level 4
+            //double sum = 0.0;
+            //double maxY = 0.0;
+            //double maxX = 0.0;
+            //for (int i = 0; sum <= 0.999; i += 10)
+            //{
+            //    double y = MaxBoltzGenerator.GetProb(Level4ParticleMass, temp, i);
+            //    if (y > maxY)
+            //    {
+            //        maxY = y;
+            //    }
+            //    sum += y * 10;
+            //    maxX = i;
+            //}
+            //var generator = new MaxBoltzGenerator(cont, temp, maxX, maxY);
+
             // level 1 & 2
             //cont.Dictionary.AddParticle(info);
             //cont.AddRandomParticles(generator, name, nParticles);
 
             // level 3
-            //cont.AddRandomParticles(generator, AmmoniaName, particlesPerReactant,
-            //    new DongUtility.Range(0, 22.5), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
-            //cont.AddRandomParticles(generator, HydrochloricAcidName, particlesPerReactant,
-            //    new DongUtility.Range(27.5, containerSize), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
+            cont.AddRandomParticles(generator, AmmoniaName, particlesPerReactant,
+                new DongUtility.Range(0, 22.5), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
+            cont.AddRandomParticles(generator, HydrochloricAcidName, particlesPerReactant,
+                new DongUtility.Range(27.5, containerSize), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
 
             // level 4
-            cont.AddRandomParticles(generator, ReactantName, nParticles);
-            cont.InitializeExperiment();
+            //cont.AddRandomParticles(generator, ReactantName, nParticles);
+            //cont.InitializeExperiment();
 
             var visualization = new ThermodynamicsVisualization(cont)
             {
                 BoxColor = Colors.IndianRed,
 
                 // level 3
-                //StopTime = 2.5
+                StopTime = 2.5
 
-                // level 4
-                StopTime = 3.67
+                //level 4
+                //StopTime = 3.67
             };
 
             Timeline.MaximumPoints = 20000;
@@ -179,50 +179,50 @@ namespace Visualizer.Thermodynamics
             //viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString());
 
             // level 3
+            viz.Manager.AddGraph(
+                [
+                    new GraphDataManager.TimelineInfo(
+                        new TimelinePrototype(AmmoniaName, ConvertColor(Colors.LightSkyBlue)),
+                        new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(AmmoniaName))),
+                    new GraphDataManager.TimelineInfo(
+                        new TimelinePrototype(HydrochloricAcidName, ConvertColor(Colors.OrangeRed)),
+                        new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(HydrochloricAcidName))),
+                    new GraphDataManager.TimelineInfo(
+                        new TimelinePrototype(AmmoniumChlorideName, ConvertColor(Colors.Gray)),
+                        new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(AmmoniumChlorideName)))
+                ],
+                "Time (s)",
+                "Particle count");
+            viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => cont.Temperature, "Time (s)", "Temperature (K)");
+            viz.Manager.AddHist(histogramBins, ConvertColor(Colors.BlueViolet), () => cont.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
+            viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString("F1"));
+
+            // level 4
             //viz.Manager.AddGraph(
             //    [
             //        new GraphDataManager.TimelineInfo(
-            //            new TimelinePrototype(AmmoniaName, ConvertColor(Colors.LightSkyBlue)),
-            //            new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(AmmoniaName))),
+            //            new TimelinePrototype($"{ReactantName}/{ReactantName}0", ConvertColor(Colors.DodgerBlue)),
+            //            new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.NormalizedConcentration)),
             //        new GraphDataManager.TimelineInfo(
-            //            new TimelinePrototype(HydrochloricAcidName, ConvertColor(Colors.OrangeRed)),
-            //            new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(HydrochloricAcidName))),
-            //        new GraphDataManager.TimelineInfo(
-            //            new TimelinePrototype(AmmoniumChlorideName, ConvertColor(Colors.Gray)),
-            //            new GraphDataManager.BasicFunctionPair(() => visualization.Time, () => cont.GetNParticles(AmmoniumChlorideName)))
+            //            new TimelinePrototype($"{ProductName}/{ReactantName}0", ConvertColor(Colors.Goldenrod)),
+            //            new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.ProductFraction))
             //    ],
             //    "Time (s)",
-            //    "Particle count");
-            //viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => cont.Temperature, "Time (s)", "Temperature (K)");
-            //viz.Manager.AddHist(histogramBins, ConvertColor(Colors.BlueViolet), () => cont.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
-            //viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString("F1"));
+            //    "Normalized concentration");
 
-            // level 4
-            viz.Manager.AddGraph(
-                [
-                    new GraphDataManager.TimelineInfo(
-                        new TimelinePrototype($"{ReactantName}/{ReactantName}0", ConvertColor(Colors.DodgerBlue)),
-                        new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.NormalizedConcentration)),
-                    new GraphDataManager.TimelineInfo(
-                        new TimelinePrototype($"{ProductName}/{ReactantName}0", ConvertColor(Colors.Goldenrod)),
-                        new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.ProductFraction))
-                ],
-                "Time (s)",
-                "Normalized concentration");
+            //viz.Manager.AddGraph(
+            //    [
+            //        new GraphDataManager.TimelineInfo(
+            //            new TimelinePrototype("Measured rate", ConvertColor(Colors.MediumPurple)),
+            //            new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.CurrentMeasuredRate)),
+            //        new GraphDataManager.TimelineInfo(
+            //            new TimelinePrototype("Expected rate", ConvertColor(Colors.DarkSlateGray)),
+            //            new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.ExpectedRate))
+            //    ],
+            //    "Time (s)",
+            //    "Reaction Rate");
 
-            viz.Manager.AddGraph(
-                [
-                    new GraphDataManager.TimelineInfo(
-                        new TimelinePrototype("Measured rate", ConvertColor(Colors.MediumPurple)),
-                        new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.CurrentMeasuredRate)),
-                    new GraphDataManager.TimelineInfo(
-                        new TimelinePrototype("Expected rate", ConvertColor(Colors.DarkSlateGray)),
-                        new GraphDataManager.BasicFunctionPair(() => cont.SimulationTime, () => cont.ExpectedRate))
-                ],
-                "Time (s)",
-                "Normalized reaction rate");
-
-            viz.Manager.AddText("Rate RMSE", ConvertColor(Colors.CadetBlue), () => cont.RateRmse.ToString("F4"));
+            //viz.Manager.AddText("Rate RMSE", ConvertColor(Colors.CadetBlue), () => cont.RateRmse.ToString("F4"));
             
             viz.Show();
         }
