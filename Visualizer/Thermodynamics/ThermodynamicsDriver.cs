@@ -27,12 +27,27 @@ namespace Visualizer.Thermodynamics
 
             var cont = new ParticleContainer(containerSize);
             var info = new ParticleInfo(name, mass, ConvertColor(color));
-            
+
             //level 1
             //var generator = new FlatGenerator(cont, minSpeed, maxSpeed);
 
             //level 2
-            var generator = new MaxBoltzGenerator(cont, 273.15);
+            double temp = 273.15;
+            double sum = 0.0;
+            double maxY = 0.0;
+            double maxX = 0;
+            //rough esimate of max speed to consider for distribution
+            for (int i = 0; sum <= 0.999; i+=10)
+            {
+                double y = MaxBoltzGenerator.GetProb(mass, temp, i);
+                if (y > maxY)
+                {
+                    maxY = y;
+                }
+                sum += y * 10;
+                maxX = i;
+            }
+            var generator = new MaxBoltzGenerator(cont, temp, maxX, maxY);
 
             cont.Dictionary.AddParticle(info);
             cont.AddRandomParticles(generator, name, nParticles);
