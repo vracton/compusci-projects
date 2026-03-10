@@ -196,6 +196,7 @@ namespace Visualizer.Thermodynamics
             viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => cont.Temperature, "Time (s)", "Temperature (K)");
             viz.Manager.AddHist(histogramBins, ConvertColor(Colors.BlueViolet), () => cont.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
             viz.Manager.AddText("Temperature (K)", ConvertColor(Colors.CadetBlue), () => cont.Temperature.ToString("F1"));
+            viz.Manager.AddText("Pressure (Pa)", ConvertColor(Colors.SeaGreen), () => cont.Pressure.ToString("E3"));
 
             // level 4
             //viz.Manager.AddGraph(

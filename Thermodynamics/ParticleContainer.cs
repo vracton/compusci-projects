@@ -57,6 +57,20 @@ namespace Thermodynamics
             }
         }
 
+        public double Pressure
+        {
+            get
+            {
+                double volume = Size.X * Size.Y * Size.Z;
+                if (Particles.Count == 0 || volume <= 0)
+                {
+                    return 0;
+                }
+
+                return Particles.Count * boltzmannConstant * Temperature / volume;
+            }
+        }
+
         public ParticleContainer(double size) :
             this(size, size, size)
         { }
