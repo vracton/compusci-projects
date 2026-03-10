@@ -85,6 +85,7 @@ namespace Visualizer.Thermodynamics
         {
             int index = particleMap[particle];
             set.AddCommand(new RemoveObject(index));
+            particleMap.Remove(particle);
         }
 
         public Color BoxColor { get; set; } = Colors.SlateBlue;

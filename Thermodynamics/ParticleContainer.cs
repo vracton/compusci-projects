@@ -10,6 +10,12 @@ namespace Thermodynamics
     /// </summary>
     public class ParticleContainer(double xSize, double ySize, double zSize)
     {
+        private const string AmmoniaName = "NH3";
+        private const string HydrochloricAcidName = "HCl";
+        private const string AmmoniumChlorideName = "NH4Cl";
+        private const double reactionRadius = 2.5;
+        private const double exothermicEnergy = 2.927530375427492e-19;
+
         /// <summary>
         /// The size of the container
         /// Each component of the vector is the size in that dimension
@@ -31,17 +37,24 @@ namespace Thermodynamics
         static protected Random Random { get { return RandomGenerator.RandomGen; } }
 
         private const double boltzmannConstant = 1.38e-23;
+        private readonly Dictionary<(int x, int y, int z), List<Molecule>> spatialHash = [];
+        private readonly HashSet<Molecule> reactedParticles = [];
+        private double thermalLeftovers; //leftover energy (exothermic + extra)
 
         public double Temperature {
             get
             {
+                if (Particles.Count == 0)
+                {
+                    return 0;
+                }
+
                 double KESum = 0;
                 foreach (Molecule part in Particles)
                 {
                     KESum += 0.5 * part.Mass * part.Velocity.MagnitudeSquared;
                 }
-                KESum /= Particles.Count;
-                return KESum * 2.0 / (3.0 * boltzmannConstant);
+                return ((KESum + thermalLeftovers) / Particles.Count) * 2.0 / (3.0 * boltzmannConstant);
             }
         }
 
@@ -122,6 +135,15 @@ namespace Thermodynamics
             }
         }
 
+        //add to range instead of whole box
+        public void AddRandomParticles(RandomGenerator generator, string name, int number, DongUtility.Range xRange, DongUtility.Range yRange, DongUtility.Range zRange)
+        {
+            for (int i = 0; i < number; ++i)
+            {
+                AddParticleDirectly(generator.GetRandomParticle(name, xRange, yRange, zRange));
+            }
+        }
+
         /// <summary>
         /// Updates all particles for a given time increment
         /// </summary>
@@ -136,6 +158,12 @@ namespace Thermodynamics
             {
                 part.Update(deltaTime);
                 CheckParticle(part);
+            }
+
+            BuildSpatialHash();
+
+            foreach (var part in Particles)
+            {
                 ParticleUpdate(part);
             }
 
@@ -148,7 +176,28 @@ namespace Thermodynamics
         /// </summary>
         protected virtual void ParticleUpdate(Molecule part)
         {
+            if (reactedParticles.Contains(part))
+            {
+                return;
+            }
 
+            //get the name of the particle that this one can react with
+            string partnerName = GetReactionPartnerName(part.Info.Name);
+            if (partnerName == string.Empty)
+            {
+                return;
+            }
+
+            foreach (var other in GetNearbyParticles(part, reactionRadius))
+            {
+                if (ReferenceEquals(part, other) || reactedParticles.Contains(other) || other.Info.Name != partnerName || Vector.Distance2(part.Position, other.Position) > reactionRadius * reactionRadius )
+                {
+                    continue;
+                }
+
+                ReactParticles(part, other);
+                break;
+            }
         }
 
         /// <summary>
@@ -159,16 +208,38 @@ namespace Thermodynamics
         /// <param name="center">The position of the current particle</param>
         /// <param name="rad">The radius to look within</param>        /// <param name="toBeRemoved">A list of particles that have already been removed from simulation</param>
         /// <returns>All particles within the radius rad from the given particle, plus maybe some extra</returns>
+        //get nearby particles by looking at nearby cells
         protected virtual IEnumerable<Molecule> GetNearbyParticles(Molecule center, double rad)
         {
-            return Particles;
+            int cellSpan = Math.Max(1, (int)Math.Ceiling(rad / reactionRadius));
+            var cell = GetCell(center.Position);
+
+            for (int x = cell.x - cellSpan; x <= cell.x + cellSpan; ++x)
+            {
+                for (int y = cell.y - cellSpan; y <= cell.y + cellSpan; ++y)
+                {
+                    for (int z = cell.z - cellSpan; z <= cell.z + cellSpan; ++z)
+                    {
+                        if (spatialHash.TryGetValue((x, y, z), out List<Molecule>? contents))
+                        {
+                            foreach (var particle in contents)
+                            {
+                                yield return particle;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Prepare for a single loop
         /// </summary>
         protected virtual void Setup()
-        { }
+        {
+            reactedParticles.Clear();
+            spatialHash.Clear();
+        }
 
         /// <summary>
         /// A function that extracts a specific property of a particle
@@ -235,6 +306,67 @@ namespace Thermodynamics
                 }
             }
             particle.Position = newVec;
+        }
+
+        //split the box into cells and keep track of which particles are in which cells
+        private void BuildSpatialHash()
+        {
+            spatialHash.Clear();
+            foreach (var part in Particles)
+            {
+                var cell = GetCell(part.Position);
+                if (!spatialHash.TryGetValue(cell, out List<Molecule>? contents))
+                {
+                    contents = [];
+                    spatialHash[cell] = contents;
+                }
+                contents.Add(part);
+            }
+        }
+
+        private static string GetReactionPartnerName(string name)
+        {
+            return name switch
+            {
+                AmmoniaName => HydrochloricAcidName,
+                HydrochloricAcidName => AmmoniaName,
+                _ => string.Empty
+            };
+        }
+
+        private void ReactParticles(Molecule first, Molecule second)
+        {
+            //get info for ammonium chloride
+            if (!Dictionary.Map.TryGetValue(AmmoniumChlorideName, out ParticleInfo? productInfo))
+            {
+                return;
+            }
+
+            reactedParticles.Add(first);
+            reactedParticles.Add(second);
+            RemoveParticle(first);
+            RemoveParticle(second);
+
+            //make sure to converve momentum (and thus energy, i believe)
+            double totalMass = first.Mass + second.Mass;
+            Vector position = (first.Mass * first.Position + second.Mass * second.Position) / totalMass;
+            Vector momentum = first.Momentum + second.Momentum;
+            Vector velocity = momentum / productInfo.Mass;
+            //keep track of remaining energy
+            double reactantEnergy = first.KineticEnergy + second.KineticEnergy + exothermicEnergy;
+            double productKineticEnergy = 0.5 * productInfo.Mass * velocity.MagnitudeSquared;
+            thermalLeftovers += reactantEnergy - productKineticEnergy;
+
+            AddParticle(Dictionary.MakeParticle(position, velocity, AmmoniumChlorideName));
+        }
+
+        //pos -> cell
+        private static (int x, int y, int z) GetCell(Vector position)
+        {
+            return (
+                (int)Math.Floor(position.X / reactionRadius),
+                (int)Math.Floor(position.Y / reactionRadius),
+                (int)Math.Floor(position.Z / reactionRadius));
         }
     }
 }
