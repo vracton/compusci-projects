@@ -119,19 +119,12 @@ namespace Thermodynamics
 
             Setup();
 
-#if PARALLEL
-            Parallel.ForEach(Particles, (part) =>
-#else
             foreach (var part in Particles)
-#endif
             {
                 part.Update(deltaTime);
                 CheckParticle(part);
                 ParticleUpdate(part);
             }
-#if PARALLEL
-            );
-#endif
 
             ParticlesToAdd.ForEach((x) => AddParticleDirectly(x));
             ParticlesToRemove.ForEach((x) => RemoveParticleDirectly(x));
