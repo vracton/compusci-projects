@@ -48,6 +48,9 @@ namespace Thermodynamics
 
         public List<Molecule> ParticlesToAdd { get; } = [];
         public List<Molecule> ParticlesToRemove { get; } = [];
+
+        public int NumThreads { get; init; }
+
         public void AddParticle(Molecule part)
         {
             ParticlesToAdd.Add(part);
@@ -119,11 +122,45 @@ namespace Thermodynamics
 
             Setup();
 
-            foreach (var part in Particles)
+            if (NumThreads > 0)
             {
-                part.Update(deltaTime);
-                CheckParticle(part);
-                ParticleUpdate(part);
+                var updateThreads = new Thread[NumThreads];
+
+                for (int i = 0; i < NumThreads; i++)
+                {
+                    int particlesPerThread = Particles.Count / NumThreads;
+                    int start = i * particlesPerThread;
+                    int end = (i == NumThreads - 1) ? Particles.Count : start + particlesPerThread; //last thread will take all extras
+
+                    Thread thread = new Thread(() =>
+                    {
+                        for (int j = start; j < end; j++)
+                        {
+                            var part = Particles[j];
+                            part.Update(deltaTime);
+                            CheckParticle(part);
+                            ParticleUpdate(part);
+                        }
+                    });
+                    
+                    thread.Start();
+                    updateThreads[i] = thread;
+                }
+
+                foreach (var t in updateThreads)
+                {
+                    t.Join();
+
+                }
+            }
+            else
+            {
+                foreach (var part in Particles)
+                {
+                    part.Update(deltaTime);
+                    CheckParticle(part);
+                    ParticleUpdate(part);
+                }
             }
 
             ParticlesToAdd.ForEach((x) => AddParticleDirectly(x));

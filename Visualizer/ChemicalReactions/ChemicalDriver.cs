@@ -20,7 +20,7 @@ namespace Visualizer.ChemicalReactions
             const double temperature = 293.17;
             const double reactionRadius = 2;
 
-            var container = new ReactingParticleContainer(containerSize, reactionRadius);
+            var container = new ReactingParticleContainer(containerSize, reactionRadius, 5);
 
             const double mass = 1e-26;
 
@@ -47,6 +47,7 @@ namespace Visualizer.ChemicalReactions
             Timeline.MaximumPoints = 3000;
 
             AddChemicalGraphs(viz, container, visualization);
+            viz.Manager.AddHist(50, ConvertColor(Colors.BlueViolet), () => container.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
             viz.Manager.AddText("Time elapsed (s)", ConvertColor(Colors.Crimson), () => TimeElapsed().ToString());
             visualization.StopTime = 1;
 

@@ -21,6 +21,13 @@ namespace Thermodynamics
             CollisionRadius = collisionRadius;
         }
 
+        public ReactingParticleContainer(double side, double collisionRadius, int updateThreads) :
+            base(side)
+        {
+            CollisionRadius = collisionRadius;
+            NumThreads = updateThreads;
+        }
+
         public double Temperature
         {
             get
