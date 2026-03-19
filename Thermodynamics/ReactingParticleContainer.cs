@@ -28,6 +28,8 @@ namespace Thermodynamics
             NumThreads = updateThreads;
         }
 
+        private HashSet<Molecule> reactedParticles = [];
+
         public double Temperature
         {
             get
@@ -36,6 +38,12 @@ namespace Thermodynamics
 
                 return sumKE / Particles.Count * 2.0 / 3.0 / Constants.BoltzmannConstant;
             }
+        }
+
+        protected override void Setup()
+        {
+            reactedParticles.Clear();
+            base.Setup();
         }
 
         /// <summary>
@@ -67,16 +75,20 @@ namespace Thermodynamics
                 return;
             }
             var particles = GetNearbyParticles(particle, CollisionRadius);
-            var particleList = new List<Molecule>();
+            var particleList = new List<(Molecule, double)>();
             foreach (var part in particles)
             {
                 if (!ParticlesToRemove.Contains(part))
-                    particleList.Add(part);
+                    particleList.Add((part, Vector.Distance(particle.Position, part.Position)));
             }
+
+            //sort by decreasing distance
+            particleList.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+            var sortedParticleList = particleList.Select(x => x.Item1).ToList();
 
             if (particleList.Count > 1)
             {
-                React(particle, particleList);
+                React(particle, sortedParticleList);
             }
         }
 

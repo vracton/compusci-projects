@@ -183,16 +183,38 @@ namespace Thermodynamics
         /// <param name="center">The position of the current particle</param>
         /// <param name="rad">The radius to look within</param>        /// <param name="toBeRemoved">A list of particles that have already been removed from simulation</param>
         /// <returns>All particles within the radius rad from the given particle, plus maybe some extra</returns>
+        private readonly Dictionary<(int x, int y, int z), List<Molecule>> spatialHash = [];
+        private static readonly double cellSize = 2.5;
         protected virtual IEnumerable<Molecule> GetNearbyParticles(Molecule center, double rad)
         {
-            return Particles;
+            int cellSpan = Math.Max(1, (int)Math.Ceiling(rad / cellSize));
+            var cell = GetCell(center.Position);
+
+            for (int x = cell.x - cellSpan; x <= cell.x + cellSpan; ++x)
+            {
+                for (int y = cell.y - cellSpan; y <= cell.y + cellSpan; ++y)
+                {
+                    for (int z = cell.z - cellSpan; z <= cell.z + cellSpan; ++z)
+                    {
+                        if (spatialHash.TryGetValue((x, y, z), out List<Molecule>? contents))
+                        {
+                            foreach (var particle in contents)
+                            {
+                                yield return particle;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Prepare for a single loop
         /// </summary>
         protected virtual void Setup()
-        { }
+        {
+            spatialHash.Clear();
+        }
 
         /// <summary>
         /// A function that extracts a specific property of a particle
@@ -259,6 +281,30 @@ namespace Thermodynamics
                 }
             }
             particle.Position = newVec;
+        }
+
+        private void BuildSpatialHash()
+        {
+            spatialHash.Clear();
+            foreach (var part in Particles)
+            {
+                var cell = GetCell(part.Position);
+                if (!spatialHash.TryGetValue(cell, out List<Molecule>? contents))
+                {
+                    contents = [];
+                    spatialHash[cell] = contents;
+                }
+                contents.Add(part);
+            }
+        }
+
+        //pos -> cell
+        private static (int x, int y, int z) GetCell(Vector position)
+        {
+            return (
+                (int)Math.Floor(position.X / cellSize),
+                (int)Math.Floor(position.Y / cellSize),
+                (int)Math.Floor(position.Z / cellSize));
         }
     }
 }
