@@ -26,20 +26,27 @@ namespace Visualizer.ChemicalReactions
                 new ParticleInfo("Molecule", 1e-26, ConvertColor(Colors.NavajoWhite)),
                 new ParticleInfo("NH3", 2.83e-23, ConvertColor(Colors.LightPink)),
                 new ParticleInfo("HCl", 6.05e-23, ConvertColor(Colors.Crimson)),
-                new ParticleInfo("NH4Cl", 8.88e-23, ConvertColor(Colors.IndianRed))
+                new ParticleInfo("NH4Cl", 8.88e-23, ConvertColor(Colors.Chartreuse))
             ];
 
-            string[] equations =
+            (string, double)[] equations =
             [
-                "NH3+HCl->NH4Cl"
+                ("NH3+HCl->NH4Cl", 2.9e-19)
             ];
 
             var container = new ReactingParticleContainer(molecules, equations, containerSize, reactionRadius, 0);
 
             var generator = new BoltzmannGenerator(container, temperature, container.Dictionary.Map["Molecule"]);
 
-            const int nParticles = 1000;
-            container.AddRandomParticles(generator, "Molecule", nParticles);
+            //level 1
+            //const int nParticles = 1000;
+            //container.AddRandomParticles(generator, "Molecule", nParticles);
+
+            //level 2 & 3
+            container.AddRandomParticles(generator, "NH3", 500,
+                new DongUtility.Range(0, containerSize / 2), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
+            container.AddRandomParticles(generator, "HCl", 500,
+                new DongUtility.Range(containerSize / 2, containerSize), new DongUtility.Range(0, containerSize), new DongUtility.Range(0, containerSize));
 
 
             var visualization = new ChemicalVisualization(container)

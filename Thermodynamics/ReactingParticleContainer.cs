@@ -9,11 +9,13 @@ namespace Thermodynamics
     {
         public string[] Reactants { get; init; }
         public string[] Products { get; init; }
+        public double Enthalpy { get; init; }
 
-        public Reaction(string[] reactants, string[] products)
+        public Reaction(string[] reactants, string[] products, double enthalpy)
         {
             Reactants = reactants;
             Products = products;
+            Enthalpy = enthalpy;
         }
     }
 
@@ -43,7 +45,7 @@ namespace Thermodynamics
             NumThreads = updateThreads;
         }
 
-        public ReactingParticleContainer(ParticleInfo[] molecules, string[] equations, double side, double collisionRadius, int updateThreads) :
+        public ReactingParticleContainer(ParticleInfo[] molecules, (string, double)[] equations, double side, double collisionRadius, int updateThreads) :
             base(side)
         {
             CollisionRadius = collisionRadius;
@@ -53,20 +55,20 @@ namespace Thermodynamics
 
         public List<Reaction> Reactions { get; private set; } = new List<Reaction>();
 
-        private void RegisterReactions(ParticleInfo[] molecules, string[] equations)
+        private void RegisterReactions(ParticleInfo[] molecules, (string, double)[] equations)
         {
-            //add molecules
+            //add molecules to dictionary
             foreach (ParticleInfo mol in molecules)
             {
                 Dictionary.AddParticle(mol);
             }
 
             //register reactions
-            foreach (string equation in equations)
+            foreach ((string equation, double enthalpy) in equations)
             {
                 string[] sides = equation.Split("->");
-                string[] reactants = sides[0].Split("+").Select(x => x.Trim()).ToArray();
-                string[] products = sides[1].Split("+").Select(x => x.Trim()).ToArray();
+                string[] reactants = ExpandReactionSide(sides[0]);
+                string[] products = ExpandReactionSide(sides[1]);
 
                 foreach (string comp in reactants.Concat(products))
                 {
@@ -76,8 +78,39 @@ namespace Thermodynamics
                     }
                 }
 
-                Reactions.Add(new Reaction(reactants, products));
+                Reactions.Add(new Reaction(reactants, products, enthalpy));
             }
+        }
+
+        //expand components, i.e. 2H+O becomes H,H,O
+        private static string[] ExpandReactionSide(string side)
+        {
+            var expanded = new List<string>();
+
+            foreach (string rawComponent in side.Split("+"))
+            {
+                string component = rawComponent.Trim();
+
+                int index = 0;
+                while (index < component.Length && char.IsDigit(component[index]))
+                {
+                    index++;
+                }
+
+                int coefficient = 1;
+                if (index > 0)
+                {
+                    coefficient = int.Parse(component[..index]);
+                    component = component[index..].Trim();
+                }
+
+                for (int i = 0; i < coefficient; ++i)
+                {
+                    expanded.Add(component);
+                }
+            }
+
+            return [..expanded];
         }
 
         private HashSet<Molecule> reactedParticles = [];
@@ -117,12 +150,21 @@ namespace Thermodynamics
             }
         }
 
+        //add to range instead of whole box
+        public void AddRandomParticles(RandomGenerator generator, string name, int number, DongUtility.Range xRange, DongUtility.Range yRange, DongUtility.Range zRange)
+        {
+            for (int i = 0; i < number; ++i)
+            {
+                AddParticleDirectly(generator.GetRandomParticle(name, xRange, yRange, zRange));
+            }
+        }
+
         /// <summary>
         /// Checks whether a the particle is close enough to another particle to react, and calls React() if so
         /// </summary>
         private void CheckCollisions(Molecule particle)
         {
-            if (ParticlesToRemove.Contains(particle))
+            if (ParticlesToRemove.Contains(particle) || reactedParticles.Contains(particle))
             {
                 return;
             }
@@ -130,7 +172,8 @@ namespace Thermodynamics
             var particleList = new List<(Molecule, double)>();
             foreach (var part in particles)
             {
-                if (!ParticlesToRemove.Contains(part))
+                //make sure particle is usable
+                if (!(ParticlesToRemove.Contains(part) || reactedParticles.Contains(part) || ReferenceEquals(particle, part)))
                     particleList.Add((part, Vector.Distance(particle.Position, part.Position)));
             }
 
@@ -138,7 +181,7 @@ namespace Thermodynamics
             particleList.Sort((x, y) => x.Item2.CompareTo(y.Item2));
             var sortedParticleList = particleList.Select(x => x.Item1).ToList();
 
-            if (particleList.Count > 1)
+            if (particleList.Count > 0)
             {
                 React(particle, sortedParticleList);
             }
@@ -146,9 +189,71 @@ namespace Thermodynamics
 
         protected virtual void React(Molecule particle, List<Molecule> nearby)
         {
-            // Here the particle is the primary particle, and nearby is a list of all
-            // nearby particles.  This determines what happens when you react two particles
-            // Use this for Level III
+            var usedParticles = new List<Molecule>();
+            Reaction chosenReaction = default;
+
+            //check if a reaction is possible with nearby particles
+            foreach (var reaction in Reactions)
+            {
+                bool particleUsed = false;
+                bool possible = true;
+                var remaining = new List<Molecule>(nearby);
+                var used = new List<Molecule>();
+
+                foreach (string reactant in reaction.Reactants)
+                {
+                    if (!particleUsed && particle.Info.Name == reactant)
+                    {
+                        particleUsed = true;
+                        continue;
+                    }
+
+                    int matchIndex = remaining.FindIndex(x => x.Info.Name == reactant);
+                    if (matchIndex == -1)
+                    {
+                        possible = false;
+                        break;
+                    }
+
+                    used.Add(remaining[matchIndex]);
+                    remaining.RemoveAt(matchIndex);
+                }
+
+                if (possible && particleUsed)
+                {
+                    used.Add(particle);
+                    usedParticles = [..used];
+                    chosenReaction = reaction;
+                    break;
+                }
+            }
+
+            if (usedParticles.Count == 0)
+                return;
+
+            //remove reactants
+            foreach (var part in usedParticles)
+            {
+                reactedParticles.Add(part);
+                ParticlesToRemove.Add(part);
+            }
+
+            double massOfReactants = chosenReaction.Reactants.Sum(x => Dictionary.Map[x].Mass);
+            double massOfProducts = chosenReaction.Products.Sum(x => Dictionary.Map[x].Mass);
+            Vector momOfReactants = usedParticles.Aggregate(Vector.NullVector(), (acc, x) => acc + x.Momentum);
+            Vector centerOfReactants = usedParticles.Aggregate(Vector.NullVector(), (acc, x) => acc + x.Mass * x.Position) / massOfReactants;
+
+            //create products
+            if (chosenReaction.Products.Length == 1)
+            {
+                //if there's only product, then we just conserve momentum - not neccisarily kinetic energy
+                Vector vel = momOfReactants / massOfProducts;
+                AddParticle(Dictionary.MakeParticle(centerOfReactants, vel, chosenReaction.Products[0]));
+            }
+            else
+            {
+                //for multiple products, both momentum and kinetic energy can be conserved
+            }
         }
 
         /// <summary>

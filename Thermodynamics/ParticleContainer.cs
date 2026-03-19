@@ -158,6 +158,12 @@ namespace Thermodynamics
                 {
                     part.Update(deltaTime);
                     CheckParticle(part);
+                }
+
+                BuildSpatialHash();
+
+                foreach (var part in Particles)
+                {
                     ParticleUpdate(part);
                 }
             }
