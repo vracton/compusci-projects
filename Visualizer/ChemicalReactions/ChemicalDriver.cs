@@ -20,21 +20,7 @@ namespace Visualizer.ChemicalReactions
             const double temperature = 293.17;
             const double reactionRadius = 2;
 
-            //init variables
-            string[] equations = 
-            [
-                "NH3+HCl->NH4Cl"
-            ];
-
-            (string name, double mass, System.Drawing.Color color)[] molecules = 
-            [
-                ("Molecule", 1e-26, System.Drawing.Color.NavajoWhite),
-                ("NH3", 2.83e-23, System.Drawing.Color.LightPink),
-                ("HCl", 6.05e-23, System.Drawing.Color.Crimson),
-                ("NH4Cl", 8.88e-23, System.Drawing.Color.IndianRed)
-            ];
-
-            var container = new ReactingParticleContainer(containerSize, reactionRadius, 0);
+            var container = new ReactingParticleContainer(containerSize, reactionRadius, 5);
 
             const double mass = 1e-26;
 
