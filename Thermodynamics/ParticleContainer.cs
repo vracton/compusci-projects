@@ -150,7 +150,6 @@ namespace Thermodynamics
                 foreach (var t in updateThreads)
                 {
                     t.Join();
-
                 }
             }
             else

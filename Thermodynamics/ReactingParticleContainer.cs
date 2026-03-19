@@ -1,7 +1,22 @@
 ﻿using DongUtility;
+using System.IO.Packaging;
+using System.Linq;
 
 namespace Thermodynamics
 {
+
+    public struct Reaction
+    {
+        public string[] Reactants { get; init; }
+        public string[] Products { get; init; }
+
+        public Reaction(string[] reactants, string[] products)
+        {
+            Reactants = reactants;
+            Products = products;
+        }
+    }
+
     /// <summary>
     /// A container for particles that can react chemicallywith each other
     /// </summary>
@@ -26,6 +41,43 @@ namespace Thermodynamics
         {
             CollisionRadius = collisionRadius;
             NumThreads = updateThreads;
+        }
+
+        public ReactingParticleContainer(ParticleInfo[] molecules, string[] equations, double side, double collisionRadius, int updateThreads) :
+            base(side)
+        {
+            CollisionRadius = collisionRadius;
+            NumThreads = updateThreads;
+            RegisterReactions(molecules, equations);
+        }
+
+        public List<Reaction> Reactions { get; private set; } = new List<Reaction>();
+
+        private void RegisterReactions(ParticleInfo[] molecules, string[] equations)
+        {
+            //add molecules
+            foreach (ParticleInfo mol in molecules)
+            {
+                Dictionary.AddParticle(mol);
+            }
+
+            //register reactions
+            foreach (string equation in equations)
+            {
+                string[] sides = equation.Split("->");
+                string[] reactants = sides[0].Split("+").Select(x => x.Trim()).ToArray();
+                string[] products = sides[1].Split("+").Select(x => x.Trim()).ToArray();
+
+                foreach (string comp in reactants.Concat(products))
+                {
+                    if (!Dictionary.Map.ContainsKey(comp))
+                    {
+                        throw new Exception($"particle {comp} in equation {equation} is not defined in the particle dictionary");
+                    }
+                }
+
+                Reactions.Add(new Reaction(reactants, products));
+            }
         }
 
         private HashSet<Molecule> reactedParticles = [];

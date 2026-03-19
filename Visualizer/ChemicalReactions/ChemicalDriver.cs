@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Media;
 using Thermodynamics;
+using VisualizerControl.Shapes;
 using static GraphData.GraphDataManager;
 using static WPFUtility.UtilityFunctions;
 
@@ -20,11 +21,20 @@ namespace Visualizer.ChemicalReactions
             const double temperature = 293.17;
             const double reactionRadius = 2;
 
-            var container = new ReactingParticleContainer(containerSize, reactionRadius, 5);
+            ParticleInfo[] molecules =
+            [
+                new ParticleInfo("Molecule", 1e-26, ConvertColor(Colors.NavajoWhite)),
+                new ParticleInfo("NH3", 2.83e-23, ConvertColor(Colors.LightPink)),
+                new ParticleInfo("HCl", 6.05e-23, ConvertColor(Colors.Crimson)),
+                new ParticleInfo("NH4Cl", 8.88e-23, ConvertColor(Colors.IndianRed))
+            ];
 
-            const double mass = 1e-26;
+            string[] equations =
+            [
+                "NH3+HCl->NH4Cl"
+            ];
 
-            container.RegisterParticleType("Molecule", mass, ConvertColor(Colors.NavajoWhite));
+            var container = new ReactingParticleContainer(molecules, equations, containerSize, reactionRadius, 0);
 
             var generator = new BoltzmannGenerator(container, temperature, container.Dictionary.Map["Molecule"]);
 
