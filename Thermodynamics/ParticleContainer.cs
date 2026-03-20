@@ -125,10 +125,10 @@ namespace Thermodynamics
             if (NumThreads > 0)
             {
                 var updateThreads = new Thread[NumThreads];
+                int particlesPerThread = Particles.Count / NumThreads;
 
                 for (int i = 0; i < NumThreads; i++)
                 {
-                    int particlesPerThread = Particles.Count / NumThreads;
                     int start = i * particlesPerThread;
                     int end = (i == NumThreads - 1) ? Particles.Count : start + particlesPerThread; //last thread will take all extras
 
@@ -139,7 +139,6 @@ namespace Thermodynamics
                             var part = Particles[j];
                             part.Update(deltaTime);
                             CheckParticle(part);
-                            ParticleUpdate(part);
                         }
                     });
                     
@@ -150,6 +149,39 @@ namespace Thermodynamics
                 foreach (var t in updateThreads)
                 {
                     t.Join();
+                }
+
+                BuildSpatialHash();
+
+                List<Molecule>[] results = new List<Molecule>[NumThreads]; //molecules to add, synced in main thread
+
+                for (int i = 0; i < NumThreads; i++)
+                {
+                    int start = i * particlesPerThread;
+                    int end = (i == NumThreads - 1) ? Particles.Count : start + particlesPerThread; //last thread will take all extras
+                    int threadIndex = i;
+                    results[threadIndex] = new List<Molecule>();
+
+                    Thread thread = new Thread(() =>
+                    {
+                        for (int j = start; j < end; j++)
+                        {
+                            results[threadIndex].AddRange(ParticleUpdate(Particles[j]));
+                        }
+                    });
+
+                    thread.Start();
+                    updateThreads[i] = thread;
+                }
+
+                foreach (var t in updateThreads)
+                {
+                    t.Join();
+                }
+
+                foreach (var list in results)
+                {
+                    list.ForEach((x) => AddParticle(x));
                 }
             }
             else
@@ -164,7 +196,8 @@ namespace Thermodynamics
 
                 foreach (var part in Particles)
                 {
-                    ParticleUpdate(part);
+                    List<Molecule> toAdd = ParticleUpdate(part);
+                    toAdd.ForEach((x) => AddParticle(x));
                 }
             }
 
@@ -175,9 +208,9 @@ namespace Thermodynamics
         /// <summary>
         /// A function that can be overridden to update particles in a specific way
         /// </summary>
-        protected virtual void ParticleUpdate(Molecule part)
+        protected virtual List<Molecule> ParticleUpdate(Molecule part)
         {
-
+            return [];
         }
 
         /// <summary>

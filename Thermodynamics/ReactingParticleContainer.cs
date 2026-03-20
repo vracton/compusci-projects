@@ -162,18 +162,14 @@ namespace Thermodynamics
         /// <summary>
         /// Checks whether a the particle is close enough to another particle to react, and calls React() if so
         /// </summary>
-        private void CheckCollisions(Molecule particle)
+        private List<Molecule> CheckCollisions(Molecule particle)
         {
-            if (ParticlesToRemove.Contains(particle) || reactedParticles.Contains(particle))
-            {
-                return;
-            }
             var particles = GetNearbyParticles(particle, CollisionRadius);
             var particleList = new List<(Molecule, double)>();
             foreach (var part in particles)
             {
                 //make sure particle is usable
-                if (!(ParticlesToRemove.Contains(part) || reactedParticles.Contains(part) || ReferenceEquals(particle, part)))
+                if (!ReferenceEquals(particle, part))
                     particleList.Add((part, Vector.Distance(particle.Position, part.Position)));
             }
 
@@ -183,59 +179,72 @@ namespace Thermodynamics
 
             if (particleList.Count > 0)
             {
-                React(particle, sortedParticleList);
+                return React(particle, sortedParticleList);
             }
+
+            return [];
         }
 
-        protected virtual void React(Molecule particle, List<Molecule> nearby)
+        public int CompletedReactions { get; private set; } = 0;
+        private readonly object _reactionLock = new object();
+
+        protected virtual List<Molecule> React(Molecule particle, List<Molecule> nearby)
         {
             var usedParticles = new List<Molecule>();
             Reaction chosenReaction = default;
 
             //check if a reaction is possible with nearby particles
-            foreach (var reaction in Reactions)
+            lock (_reactionLock)
             {
-                bool particleUsed = false;
-                bool possible = true;
-                var remaining = new List<Molecule>(nearby);
-                var used = new List<Molecule>();
-
-                foreach (string reactant in reaction.Reactants)
+                if (reactedParticles.Contains(particle) || ParticlesToRemove.Contains(particle))
                 {
-                    if (!particleUsed && particle.Info.Name == reactant)
+                    return [];
+                }
+
+                foreach (var reaction in Reactions)
+                {
+                    bool particleUsed = false;
+                    bool possible = true;
+                    var remaining = new List<Molecule>(nearby);
+                    var used = new List<Molecule>();
+
+                    foreach (string reactant in reaction.Reactants)
                     {
-                        particleUsed = true;
-                        continue;
+                        if (!particleUsed && particle.Info.Name == reactant)
+                        {
+                            particleUsed = true;
+                            continue;
+                        }
+
+                        int matchIndex = remaining.FindIndex(x => (x.Info.Name == reactant && !reactedParticles.Contains(x) && !ParticlesToRemove.Contains(x)));
+                        if (matchIndex == -1)
+                        {
+                            possible = false;
+                            break;
+                        }
+
+                        used.Add(remaining[matchIndex]);
+                        remaining.RemoveAt(matchIndex);
                     }
 
-                    int matchIndex = remaining.FindIndex(x => x.Info.Name == reactant);
-                    if (matchIndex == -1)
+                    if (possible && particleUsed)
                     {
-                        possible = false;
+                        used.Add(particle);
+                        usedParticles = [..used];
+                        chosenReaction = reaction;
                         break;
                     }
-
-                    used.Add(remaining[matchIndex]);
-                    remaining.RemoveAt(matchIndex);
                 }
 
-                if (possible && particleUsed)
+                if (usedParticles.Count == 0)
+                    return [];
+
+                //remove reactants
+                foreach (var part in usedParticles)
                 {
-                    used.Add(particle);
-                    usedParticles = [..used];
-                    chosenReaction = reaction;
-                    break;
+                    reactedParticles.Add(part);
+                    ParticlesToRemove.Add(part);
                 }
-            }
-
-            if (usedParticles.Count == 0)
-                return;
-
-            //remove reactants
-            foreach (var part in usedParticles)
-            {
-                reactedParticles.Add(part);
-                ParticlesToRemove.Add(part);
             }
 
             double massOfReactants = chosenReaction.Reactants.Sum(x => Dictionary.Map[x].Mass);
@@ -248,7 +257,7 @@ namespace Thermodynamics
             if (chosenReaction.Products.Length == 1)
             {
                 //if there's only product, then we just conserve momentum - not neccisarily kinetic energy
-                AddParticle(Dictionary.MakeParticle(centerOfReactants, comVel, chosenReaction.Products[0]));
+                return [Dictionary.MakeParticle(centerOfReactants, comVel, chosenReaction.Products[0])];
             }
             else
             {
@@ -268,7 +277,7 @@ namespace Thermodynamics
                     //generate random directions, while making sure COM-relative momenta sum to 0
                     for (int i = 0; i < w.Length; i++)
                     {
-                        a[i] = Vector.RandomDirection(1, Random);
+                        a[i] = Vector.RandomDirection(1, new Random());
                         aAvg += a[i] * Dictionary.Map[chosenReaction.Products[i]].Mass;
                     }
                     aAvg /= massOfProducts;
@@ -294,20 +303,28 @@ namespace Thermodynamics
                     Array.Fill(w, Vector.NullVector());
                 }
 
+                List<Molecule> products = new List<Molecule>();
+
                 for (int i = 0; i < chosenReaction.Products.Length; i++)
                 {
-                    AddParticle(Dictionary.MakeParticle(centerOfReactants, comVel + w[i], chosenReaction.Products[i]));
+                    products.Add(Dictionary.MakeParticle(centerOfReactants, comVel + w[i], chosenReaction.Products[i]));
                 }
+
+                return products;
             }
         }
 
         /// <summary>
         /// Updates a single particle in the container
         /// </summary>
-        protected override void ParticleUpdate(Molecule part)
+        protected override List<Molecule> ParticleUpdate(Molecule part)
         {
-            CheckCollisions(part);
+            List<Molecule> newParticles = [];
+
+            newParticles.AddRange(CheckCollisions(part));
             CheckDecay(part);
+
+            return newParticles;
         }
 
         protected virtual void CheckDecay(Molecule part)
