@@ -169,7 +169,7 @@ namespace Thermodynamics
             foreach (var part in particles)
             {
                 //make sure particle is usable
-                if (!ReferenceEquals(particle, part))
+                if (!ReferenceEquals(particle, part) && Vector.Distance(particle.Position, part.Position) <= CollisionRadius)
                     particleList.Add((part, Vector.Distance(particle.Position, part.Position)));
             }
 
