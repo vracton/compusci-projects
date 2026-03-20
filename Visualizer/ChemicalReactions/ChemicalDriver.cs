@@ -1,4 +1,5 @@
-﻿using GraphControl;
+﻿using System;
+using GraphControl;
 using GraphData;
 using MotionVisualizer3D;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Visualizer.ChemicalReactions
                 new ParticleInfo("Molecule", 1e-26, ConvertColor(Colors.NavajoWhite)),
                 new ParticleInfo("NH3", 2.83e-23, ConvertColor(Colors.LightPink)),
                 new ParticleInfo("HCl", 6.05e-23, ConvertColor(Colors.Crimson)),
-                new ParticleInfo("NH4Cl", 8.88e-23, ConvertColor(Colors.Chartreuse))
+                new ParticleInfo("NH4Cl", 8.88e-23, ConvertColor(Colors.MediumVioletRed))
             ];
 
             (string, double)[] equations =
@@ -51,9 +52,10 @@ namespace Visualizer.ChemicalReactions
 
             var visualization = new ChemicalVisualization(container)
             {
-                BoxColor = Colors.IndianRed
+                BoxColor = Colors.IndianRed,
+                StopCondition = (Func<bool>?)(() => container.GetNParticles("NH3") < 5)
             };
-
+            
             var viz = new MotionVisualizer3DControl(visualization)
             {
                 TimeIncrement = deltaTime,
@@ -64,10 +66,10 @@ namespace Visualizer.ChemicalReactions
             Timeline.MaximumPoints = 3000;
 
             AddChemicalGraphs(viz, container, visualization);
-            viz.Manager.AddHist(50, ConvertColor(Colors.BlueViolet), () => container.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
+            //viz.Manager.AddHist(50, ConvertColor(Colors.BlueViolet), () => container.GetParticlePropertyList((Molecule part) => part.Velocity.Magnitude), "Speed (m/s)");
+            viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => container.Temperature, "Time (s)", "Temperature (K)");
             viz.Manager.AddText("Time elapsed (s)", ConvertColor(Colors.Crimson), () => TimeElapsed().ToString());
-            visualization.StopTime = 1;
-
+            //visualization.StopTime = 1;
             viz.Show();
         } 
 

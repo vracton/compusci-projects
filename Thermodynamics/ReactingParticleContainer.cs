@@ -242,17 +242,62 @@ namespace Thermodynamics
             double massOfProducts = chosenReaction.Products.Sum(x => Dictionary.Map[x].Mass);
             Vector momOfReactants = usedParticles.Aggregate(Vector.NullVector(), (acc, x) => acc + x.Momentum);
             Vector centerOfReactants = usedParticles.Aggregate(Vector.NullVector(), (acc, x) => acc + x.Mass * x.Position) / massOfReactants;
+            Vector comVel = momOfReactants / massOfProducts;
 
             //create products
             if (chosenReaction.Products.Length == 1)
             {
                 //if there's only product, then we just conserve momentum - not neccisarily kinetic energy
-                Vector vel = momOfReactants / massOfProducts;
-                AddParticle(Dictionary.MakeParticle(centerOfReactants, vel, chosenReaction.Products[0]));
+                AddParticle(Dictionary.MakeParticle(centerOfReactants, comVel, chosenReaction.Products[0]));
             }
             else
             {
                 //for multiple products, both momentum and kinetic energy can be conserved
+                //velocity of molecule i, u_i, equals v_{COM} plus some w_i, such that the sum of momenta relative to COM is 0
+                double reactantKE = usedParticles.Sum(x => x.KineticEnergy);
+                double KEout = reactantKE + chosenReaction.Enthalpy;
+                double KErel = KEout - 0.5 * massOfProducts * Math.Pow(comVel.Magnitude, 2);
+
+                Vector[] w = new Vector[chosenReaction.Products.Length];
+
+                if (KErel >= 0)
+                {
+                    Vector[] a = new Vector[chosenReaction.Products.Length];
+                    Vector aAvg = Vector.NullVector();
+
+                    //generate random directions, while making sure COM-relative momenta sum to 0
+                    for (int i = 0; i < w.Length; i++)
+                    {
+                        a[i] = Vector.RandomDirection(1, Random);
+                        aAvg += a[i] * Dictionary.Map[chosenReaction.Products[i]].Mass;
+                    }
+                    aAvg /= massOfProducts;
+
+                    double curKE = 0;
+                    for (int i = 0; i < w.Length; i++)
+                    {
+                        a[i] -= aAvg;
+                        curKE += 0.5 * Dictionary.Map[chosenReaction.Products[i]].Mass * Math.Pow(a[i].Magnitude, 2);
+                    }
+
+                    //scale a_i so KE is conserved, \lambda * a_i = w_i
+                    double lambda = Math.Sqrt(KErel / curKE);
+
+                    for (int i = 0; i < w.Length; i++)
+                    {
+                        w[i] = a[i] * lambda;
+                    }
+                }
+                else
+                {
+                    //conservation of momentum requires more energy than is available, so KE is not conserved in this case
+                    Array.Fill(w, Vector.NullVector());
+                }
+
+                for (int i = 0; i < chosenReaction.Products.Length; i++)
+                {
+                    AddParticle(Dictionary.MakeParticle(centerOfReactants, comVel + w[i], chosenReaction.Products[i]));
+                }
             }
         }
 

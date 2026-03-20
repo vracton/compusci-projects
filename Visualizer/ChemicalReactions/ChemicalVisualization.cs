@@ -1,4 +1,5 @@
-﻿using DongUtility;
+﻿using System;
+using DongUtility;
 using System.Collections.Generic;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -40,6 +41,7 @@ namespace Visualizer.ChemicalReactions
         public double BoxScale { get; set; } = 1.1;
 
         public double StopTime { get; set; } = double.MaxValue;
+        public Func<bool>? StopCondition { get; set; }
 
         public CommandSet<VisualizerControl.Visualizer> Initialization()
         {
@@ -99,7 +101,7 @@ namespace Visualizer.ChemicalReactions
 
             Time = newTime;
 
-            if (Time >= StopTime)
+            if (Time >= StopTime || (StopCondition?.Invoke() ?? false))
             {
                 Continue = false;
             }
