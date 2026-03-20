@@ -78,6 +78,11 @@ namespace Thermodynamics
                     }
                 }
 
+                if (reactants.Length < 2 ||  products.Length == 0)
+                {
+                    throw new Exception("each reaction must have at least 2 reactants and at least 1 product");
+                }
+
                 Reactions.Add(new Reaction(reactants, products, enthalpy));
             }
         }
