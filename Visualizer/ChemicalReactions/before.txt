@@ -1,0 +1,128 @@
+Current iodine clock simulation method
+
+1. Inputs and initialization
+
+The simulation starts from stock solutions defined in ChemicalDriver.cs. Each solution has:
+- volume in mL
+- concentration in g/L
+- solute molar mass
+- which simulated species it contributes
+
+The code converts g/L to molarity as:
+
+    concentration_M = grams_per_liter / molar_mass_g_per_mol
+
+Then it computes the initial mixed bulk concentrations by summing contributed moles and dividing by total volume.
+
+Particles are also seeded into the box in layers based on the starting solutions, but the particles are now mainly for visualization. They do not drive the chemistry timing anymore.
+
+
+2. General simulation flow
+
+Each update step does this:
+
+- advance the displayed particles in the box
+- advance the bulk chemistry using concentration-based substeps
+- convert the resulting bulk concentrations back into target particle counts
+- add/remove particles so the visualization tracks the bulk state
+- update the bulk hue and record first orange / first blue timestamps
+- write a CSV row for diagnostics
+
+
+3. Current chemical substep order
+
+The chemistry is run in a fixed sequence each substep:
+
+1. Slow iodate + bisulfite reaction
+   IO3^- + HSO3^- derived step producing I^-, SO4^2-, and H^+
+
+2. Mercury sink
+   Excess iodide is scavenged by Hg^2+ into HgI2.
+   This is handled as a fast physical sink using HgI2 solubility rather than an ordinary collision event.
+
+3. Iodine formation
+   Remaining iodide reacts with iodate and acid to form iodine.
+
+4. Iodine quench by bisulfite
+   Residual bisulfite destroys iodine.
+
+5. Starch binding
+   Surviving iodine binds starch and becomes the blue starch complex proxy.
+
+
+4. How slow and fast behavior is represented
+
+Different process speeds are represented in two ways:
+
+A. Reaction rate constants
+
+Each finite-rate process has its own rate constant. The reaction extent for a substep is:
+
+    extent = rate * step_time
+
+where the rate is built from the rate constant times concentration terms.
+
+For example:
+- iodate/bisulfite feed step uses IodateBisulfiteRate
+- iodine-forming step uses IodineFormationRate
+- iodine quench uses IodineBisulfiteQuenchRate
+- starch binding uses StarchBindingRate
+
+Larger rate constants make the process happen faster in a given chemical state.
+
+B. Fast physical sink / equilibrium handling
+
+The HgI2 precipitation step is not treated as a normal slow kinetic step. It is treated as a fast sink that immediately removes excess free iodide until the free iodide level is consistent with the HgI2 solubility-product rule currently being used.
+
+
+5. Why the substep ordering matters
+
+The processes are not independent. Earlier steps starve later steps of reactants.
+
+- If the iodate/bisulfite step is slow, the whole clock is slow.
+- If the mercury sink is very effective, iodide is removed before it can feed iodine formation.
+- If residual bisulfite is still high, newly formed iodine is quenched before blue can build up.
+- Only iodine that survives the sink/quench competition can create the blue starch complex.
+
+Because of this, timing depends on both the rate constants and the order in which the chemistry is applied.
+
+
+6. Current definition of visible color
+
+Orange is currently tied to HgI2 exceeding a visible-concentration threshold.
+Blue is currently tied to the starch-complex proxy exceeding a visible-concentration threshold, plus a residual-bisulfite cutoff.
+
+The bulk hue is then reported as:
+- clear
+- orange
+- blue
+
+based on those bulk state thresholds, not based on the first colored particle.
+
+
+7. Potential reasons the model becomes inaccurate for other recipes
+
+The current model was tuned to one recipe and can be inaccurate away from that point for several reasons:
+
+- The rate laws are approximate rather than experimentally validated for the full Old Nassau system.
+- The visibility thresholds are fixed and may not scale correctly with other concentrations or total volumes.
+- HgI2 precipitation is simplified to a solubility-based sink and omits real precipitation dynamics.
+- The iodine/starch chemistry is simplified; real blue color behavior involves richer iodine/polyiodide/starch behavior.
+- Important intermediates and equilibria are missing, such as triiodide or additional iodine speciation.
+- Acid dependence is simplified; the iodate/iodide branch is strongly pH-sensitive.
+- The model is bulk and does not fully simulate real stirring or fluid mixing effects.
+- The same tuned parameter set may only work well near the concentration regime it was fitted on.
+- Particle visualization is a discretized proxy for the bulk state and can distort apparent behavior at low or high concentrations.
+- Errors in stock solution assumptions or reagent form can shift the true initial conditions.
+- The system contains both very fast and slower processes, so a simple explicit substep approach may not stay accurate across all recipes.
+
+
+8. Practical interpretation
+
+Right now the simulation should be viewed as a tuned phenomenological bulk model with particle visualization, not a universally predictive first-principles chemistry simulator.
+
+It can be made to match a target recipe reasonably well, but accuracy across many different recipes will likely require:
+- better validated kinetics
+- more complete chemistry and equilibria
+- better optical visibility modeling
+- or fitting against multiple experimental recipes rather than one

@@ -52,6 +52,8 @@ namespace Visualizer.ChemicalReactions
 
             var recipe = CreateDefaultRecipe();
             SeedReactantsInLayers(container, generator, recipe);
+            double? firstHgI2VisibleTime = null;
+            double? firstI2StarchVisibleTime = null;
 
             var visualization = new ChemicalVisualization(container)
             {
@@ -69,6 +71,16 @@ namespace Visualizer.ChemicalReactions
             AddChemicalGraphs(viz, container, visualization);
             viz.Manager.AddSingleGraph("Temperature", ConvertColor(Colors.CornflowerBlue), () => visualization.Time, () => container.Temperature, "Time (s)", "Temperature (K)");
             viz.Manager.AddText("Time elapsed (s)", ConvertColor(Colors.Crimson), () => TimeElapsed().ToString());
+            viz.Manager.AddText("HgI_2 molarity (M)", ConvertColor(Colors.Coral),
+                () => CalculateSpeciesMolarity(container, recipe, "HgI_2").ToString("G6"));
+            viz.Manager.AddText("I_2-starch molarity (M)", ConvertColor(Colors.Blue),
+                () => CalculateSpeciesMolarity(container, recipe, "I_2-starch").ToString("G6"));
+            viz.Manager.AddText("First time [HgI_2] >= 1e-3 (s)", ConvertColor(Colors.Coral),
+                () => FormatFirstThresholdTime(TrackFirstThresholdCrossing(container, recipe, visualization,
+                    "HgI_2", 1e-3, ref firstHgI2VisibleTime)));
+            viz.Manager.AddText("First time [I_2-starch] >= 1e-5 (s)", ConvertColor(Colors.Blue),
+                () => FormatFirstThresholdTime(TrackFirstThresholdCrossing(container, recipe, visualization,
+                    "I_2-starch", 1e-5, ref firstI2StarchVisibleTime)));
 
             viz.Show();
         }
@@ -122,22 +134,26 @@ namespace Visualizer.ChemicalReactions
                 new SolutionInput(
                     "NaHSO3",
                     VolumeMl: 10,
-                    ConcentrationM: 0.144,
+                    GramsPerLiter: 15.0 ,
+                    MolarMassGPerMol: 104.06,
                     Species: [new SpeciesContribution("HSO_3^-", 1)]),
                 new SolutionInput(
                     "Starch",
                     VolumeMl: 10,
-                    ConcentrationM: 5.0 / 342.3,
+                    GramsPerLiter: 5.0,
+                    MolarMassGPerMol: 342.3,
                     Species: [new SpeciesContribution("starch", 1)]),
                 new SolutionInput(
                     "HgCl2",
                     VolumeMl: 10,
-                    ConcentrationM: 0.011,
+                    GramsPerLiter: 3.0,
+                    MolarMassGPerMol: 271.49,
                     Species: [new SpeciesContribution("Hg^2p", 1)]),
                 new SolutionInput(
                     "KIO3",
                     VolumeMl: 20,
-                    ConcentrationM: 0.0701,
+                    GramsPerLiter: 15.0,
+                    MolarMassGPerMol: 214.0,
                     Species: [new SpeciesContribution("IO_3^-", 1)]),
             };
 
@@ -198,10 +214,35 @@ namespace Visualizer.ChemicalReactions
             return count;
         }
 
+        private static double CalculateSpeciesMolarity(ParticleContainer container, SimulationRecipe recipe,
+            string speciesName)
+        {
+            return container.GetNParticles(speciesName) / (double)recipe.ParticlesPerMolar;
+        }
+
+        private static double? TrackFirstThresholdCrossing(ParticleContainer container, SimulationRecipe recipe,
+            ChemicalVisualization visualization, string speciesName, double thresholdM, ref double? firstTime)
+        {
+            if (firstTime is null && CalculateSpeciesMolarity(container, recipe, speciesName) >= thresholdM)
+            {
+                firstTime = visualization.Time;
+            }
+
+            return firstTime;
+        }
+
+        private static string FormatFirstThresholdTime(double? time)
+        {
+            return time?.ToString("G6") ?? "Not reached";
+        }
+
         private sealed record SpeciesContribution(string SpeciesName, double StoichiometricFactor);
 
-        private sealed record SolutionInput(string Name, double VolumeMl, double ConcentrationM,
-            IReadOnlyList<SpeciesContribution> Species);
+        private sealed record SolutionInput(string Name, double VolumeMl, double GramsPerLiter,
+            double MolarMassGPerMol, IReadOnlyList<SpeciesContribution> Species)
+        {
+            public double ConcentrationM => GramsPerLiter / MolarMassGPerMol;
+        }
 
         private sealed record SimulationRecipe(IReadOnlyList<SolutionInput> Solutions,
             int ParticlesPerMolar, int MinimumParticleCount);
