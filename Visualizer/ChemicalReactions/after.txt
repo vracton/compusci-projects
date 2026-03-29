@@ -1,0 +1,254 @@
+Current Old Nassau simulation method
+
+1. Overall design
+
+The current implementation is a one-cell, well-mixed bulk chemistry model based on
+the Huber (1979) Old Nassau simulation, with particles retained only as a bounded
+visual tracer layer.
+
+This means:
+
+- the chemistry is not driven by particle collisions
+- the whole box is treated as one bulk reaction mixture
+- the chemical state is stored as molar concentrations
+- particles are used only to visualize the current bulk composition
+
+This was chosen because the Huber model itself is a bulk, well-mixed concentration
+model. Earlier attempts to force the chemistry into particle-by-particle reaction
+mechanics produced incorrect behavior, unstable local spikes, and unrealistic
+particle-count explosions.
+
+
+2. Inputs and initialization
+
+The stock solutions are still defined in ChemicalDriver.cs as:
+
+- 20 mL KIO3
+- 10 mL NaHSO3
+- 10 mL HgCl2
+- 10 mL starch
+
+Each stock input is entered in:
+
+- volume in mL
+- concentration in g/L
+- molar mass in g/mol
+
+The code converts each stock concentration to molarity as:
+
+    concentration_M = grams_per_liter / molar_mass_g_per_mol
+
+Then it computes the mixed initial bulk concentrations by simple dilution:
+
+    mixed_concentration = stock_concentration * stock_volume / total_volume
+
+The bulk state stores:
+
+- [IO3-]
+- [HSO3-]
+- [I-]
+- [H+]
+- [I2]
+- [Hg2+]
+- [HgI2]
+
+The initial [H+] is not typed in separately. It is estimated from the mixed bisulfite
+concentration using the same sulfite acid-base equilibrium idea as the Python model.
+
+Starch is not part of the kinetic state. It is treated as an indicator only.
+
+
+3. Bulk chemistry model
+
+The chemistry is advanced using the Huber-style rate laws:
+
+    v1 = k1 [IO3-][HSO3-][H+]
+    v2 = k2 [IO3-][I-]^2[H+]^2
+    v3 = k3 [I2][HSO3-]
+
+The implemented differential equations are:
+
+    d[IO3-]/dt = -v1 - v2
+    d[HSO3-]/dt = -3 v1 - v3
+    d[I-]/dt   =  v1 - 5 v2 + 2 v3
+    d[H+]/dt   =  3 v1 - 6 v2 + 3 v3
+    d[I2]/dt   =  3 v2 - v3
+
+Mercury precipitation is not handled by a separate kinetic rate law. Instead, after
+each integration stage the code enforces the HgI2 solubility constraint:
+
+    [Hg2+][I-]^2 <= 2.2e-12
+
+If that inequality is violated, excess iodide is immediately precipitated as HgI2 by
+solving for the amount that must precipitate so the remaining free concentrations
+satisfy the solubility-product condition.
+
+
+4. Numerical integration
+
+The chemistry is advanced each simulation tick by adaptive Runge-Kutta 4.
+
+For each candidate step:
+
+- one full RK4 step is computed
+- two half RK4 steps are computed
+- the relative difference between them is used as an error estimate
+
+The step length is reduced if the error is too large, and increased slightly when
+the error is much smaller than the tolerance.
+
+The key numeric settings in OldNassauParticleContainer.cs are:
+
+- relative tolerance = 1e-4
+- minimum chemistry step = 1e-8 s
+- maximum chemistry step = 0.25 s
+
+This keeps the sharp transition near the clock endpoint stable without having to use
+a tiny fixed step everywhere.
+
+
+5. Tuned rate constants
+
+The original Huber paper constants are:
+
+- k1 = 500
+- k2 = 1.0e8
+- k3 = 30000
+
+The current simulation uses slightly tuned values in ChemicalDriver.cs to move the
+timings closer to the desired experimental behavior:
+
+- k1 = 650
+- k2 = 9.2e7
+- k3 = 30000
+
+These are passed into the container at construction time and are used directly in
+the bulk rate laws.
+
+So the present simulation is no longer an exact reproduction of the Huber constants.
+It is a Huber-structured model with tuned kinetic parameters.
+
+
+6. Randomness
+
+There are now two sources of randomness.
+
+A. Visual tracer randomness
+
+Particles are placed at random positions in the box and given random directions for
+their velocities. This randomness only changes the look of the motion, not the bulk
+chemistry.
+
+B. Per-run chemistry randomness
+
+At container creation time, the three rate constants are randomly perturbed by a
+small relative factor:
+
+    k_effective = k_base * (1 + randomness * uniform(-1, +1))
+
+The current randomness setting is:
+
+- chemistryRandomness = 0.03
+
+So each run varies k1, k2, and k3 by about plus or minus 3 percent.
+
+This introduces modest run-to-run timing variation while preserving the same general
+clock behavior.
+
+
+7. Particle visualization layer
+
+Particles are no longer intended to represent stoichiometric amounts of reactants
+or products.
+
+Instead, they are a bounded tracer population used to visualize which species are
+currently important in the bulk mixture.
+
+The current tracer logic is:
+
+- the total tracer budget is fixed
+- target tracer counts are assigned in proportion to the current bulk molarities
+- H+ is excluded from this visible allocation
+- each tick, tracers are added or removed so the visible species counts match the
+  current bulk composition approximately
+
+Because of this:
+
+- particle count stays bounded
+- the box does not fill up with product spheres
+- chemistry remains governed by the bulk equations, not by rendered particle count
+
+The particles therefore show a qualitative composition snapshot, not a literal
+molecular simulation.
+
+
+8. What is displayed
+
+The graph panel now plots bulk molarity directly for the visible species rather than
+particle count.
+
+The text readouts display:
+
+- time elapsed
+- [HgI2] in molarity
+- [I2] in molarity
+- first time when [HgI2] reaches 1e-3 M
+- first time when [I2] reaches 1e-5 M
+
+These two thresholds are the current endpoint definitions:
+
+- yellow endpoint: [HgI2] >= 1e-3 M
+- dark/blue endpoint: [I2] >= 1e-5 M
+
+The black endpoint is therefore still represented by iodine concentration, not by a
+separate explicit starch-complex species.
+
+
+9. Interpretation
+
+The current method should be interpreted as:
+
+- a well-mixed Huber-style bulk kinetics simulator
+- with slightly tuned rate constants
+- with small optional run-to-run randomness
+- and with particles serving only as a visual tracer layer
+
+It is not:
+
+- a literal particle-collision chemistry simulation
+- a local mixing / multi-cell reaction-diffusion model
+- or a first-principles molecular dynamics model
+
+
+10. Strengths and limitations
+
+Strengths:
+
+- closely follows the Huber mathematical structure
+- stable and fast compared with the earlier particle-reaction attempts
+- avoids particle-count explosion
+- gives endpoint timing behavior consistent with a bulk clock-reaction model
+
+Limitations:
+
+- assumes the whole box is instantly well mixed
+- particles do not influence chemistry
+- no local concentration gradients are modeled
+- no explicit starch-complex kinetics are modeled
+- tuned k values mean it is not a strict paper reproduction anymore
+- the randomness is heuristic, not derived from experimental uncertainty analysis
+
+
+11. Practical summary
+
+In its present form, the simulation is best viewed as a tuned, one-cell Huber bulk
+model with tracer particles for visualization.
+
+If more realism is desired later, the next logical extension would be:
+
+- keep the same bulk Huber chemistry as the source of truth
+- but split the box into a small number of well-mixed cells
+- and let particles transport between those cells
+
+That would add mixing structure while keeping the chemistry mathematically tied to
+the Huber framework.
