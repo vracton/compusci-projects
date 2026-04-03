@@ -235,6 +235,7 @@ namespace Visualizer.FastestDescent
             //level 4
             //(-10, -10, 10), (-9, -9, -4), (-8, -5, -9), (-3, -8, -8), (0, 0, 0) in any order
             //(-10, -10, 10) should probably start beacuse highest
+            //optimal with vector cubics: 2.4521041153115473, -0.41425286790978655, -14.00818712537368, 1.3167129619941504, 7.930903321725747, -12.67143231715429, 4.2678293627136465, 1.5725915225554412, -5.087155631820593, 6.591825964219636, 6.660676121943258, 11.153888386017384, 7.104055560676795, 7.4657649866396785, 11.910380170907834
 
             Vector startPoint = new(-10, -10, 10);
             Vector[] remainingPoints =
@@ -245,39 +246,52 @@ namespace Visualizer.FastestDescent
                 new Vector(0, 0, 0)
             ];
 
-            double[] bestLevel4Parameters = new double[10];
+            double[] bestLevel4Parameters = new double[15];
             Vector[] bestLevel4Order = [startPoint, remainingPoints[0], remainingPoints[1], remainingPoints[2], remainingPoints[3]];
             double bestLevel4Time = double.MaxValue;
             bool foundValidLevel4 = false;
 
-            const int level4Iters = 10;
-            const double level4Alpha = 5e-2;
-            const double level4Eps = 2.5e-1;
+            const int level4Iters = 100;
+            const double level4Alpha = 1.0;
+            const double level4Eps = 5e-1;
             string level4ProgressPath = "level4_progress.txt";
+            string level4LogPath = "level4_log.txt";
             int permutationIndex = 0;
             const int totalPermutations = 24;
-            const int level4ParameterCount = 100;
+            const int level4ParameterCount = 15;
+            Random rng = new();
             int runsPerPermutation = 1 + level4Iters * (2 * level4ParameterCount + 1);
             int totalRuns = totalPermutations * runsPerPermutation;
             int currentRun = 0;
+            File.WriteAllText(level4LogPath, "");
 
             foreach (var remainingOrder in GetPermutations(remainingPoints))
             {
                 permutationIndex++;
                 Vector[] currentOrder = [startPoint, remainingOrder[0], remainingOrder[1], remainingOrder[2], remainingOrder[3]];
                 double[] currentParameters = InitializeLevel4Parameters(currentOrder);
-                double[] bestOrderParameters = new double[10];
+                for (int i = 0; i < currentParameters.Length; i++)
+                {
+                    currentParameters[i] += 10 * rng.NextDouble() - 5;
+                }
+                double[] bestOrderParameters = new double[15];
                 double bestOrderTime = double.MaxValue;
+                File.AppendAllText(level4LogPath,
+                    $"Permutation {permutationIndex}/{totalPermutations}\n" +
+                    $"Order: {FormatOrder(currentOrder)}\n" +
+                    $"Initial parameters: {string.Join(", ", currentParameters)}\n");
                 currentRun++;
                 double currentTime = RunOnceLevel4(currentOrder, currentParameters);
                 if (!double.IsFinite(currentTime) || currentTime == double.MaxValue)
                 {
+                    File.AppendAllText(level4LogPath,
+                        $"Initial evaluation invalid. currentTime={currentTime}\n\n");
                     File.WriteAllText(level4ProgressPath,
                         $"Level 4 permutation: {permutationIndex}/{totalPermutations}\n" +
                         $"runs tested: {currentRun}/{totalRuns}\n" +
                         $"order={FormatOrder(currentOrder)}\n" +
                         $"iteration=0/{level4Iters}\n" +
-                        $"status=invalid random start\n" +
+                        $"status=invalid secant start\n" +
                         $"randomStartParameters={string.Join(", ", currentParameters)}\n" +
                         $"bestOrderTime={bestOrderTime}\n" +
                         $"bestOverallTime={(foundValidLevel4 ? bestLevel4Time : "N/A")}\n" +
@@ -291,6 +305,8 @@ namespace Visualizer.FastestDescent
                     bestOrderTime = currentTime;
                     bestOrderParameters = (double[])currentParameters.Clone();
                 }
+                File.AppendAllText(level4LogPath,
+                    $"Initial evaluation: currentTime={currentTime}, bestOrderTime={bestOrderTime}\n");
 
                 File.WriteAllText(level4ProgressPath,
                     $"Level 4 permutation: {permutationIndex}/{totalPermutations}\n" +
@@ -328,6 +344,10 @@ namespace Visualizer.FastestDescent
                         }
                     }
 
+                    File.AppendAllText(level4LogPath,
+                        $"Iteration {i + 1}/{level4Iters}\n" +
+                        $"Gradient: {string.Join(", ", gradient)}\n");
+
                     for (int j = 0; j < currentParameters.Length; j++)
                     {
                         currentParameters[j] -= level4Alpha * gradient[j];
@@ -344,6 +364,10 @@ namespace Visualizer.FastestDescent
                         bestOrderTime = currentTime;
                         bestOrderParameters = (double[])currentParameters.Clone();
                     }
+
+                    File.AppendAllText(level4LogPath,
+                        $"Parameters: {string.Join(", ", currentParameters)}\n" +
+                        $"currentTime={currentTime}, bestOrderTime={bestOrderTime}, bestOverallTime={(foundValidLevel4 ? bestLevel4Time : double.MaxValue)}\n\n");
 
                     File.WriteAllText(level4ProgressPath,
                         $"Level 4 permutation: {permutationIndex}/{totalPermutations}\n" +
@@ -364,6 +388,11 @@ namespace Visualizer.FastestDescent
                     bestLevel4Order = currentOrder;
                     foundValidLevel4 = true;
                 }
+
+                File.AppendAllText(level4LogPath,
+                    $"Permutation complete. bestOrderTime={bestOrderTime}\n" +
+                    $"Best order parameters: {string.Join(", ", bestOrderParameters)}\n" +
+                    $"Best overall time: {(foundValidLevel4 ? bestLevel4Time : double.MaxValue)}\n\n");
             }
 
             if (!foundValidLevel4)
@@ -385,6 +414,12 @@ namespace Visualizer.FastestDescent
                 $"bestTime={bestLevel4Time}\n" +
                 $"order={FormatOrder(bestLevel4Order)}\n" +
                 $"parameters={string.Join(", ", bestLevel4Parameters)}");
+            File.AppendAllText(level4LogPath,
+                $"Level 4 complete\n" +
+                $"runs tested: {currentRun}/{totalRuns}\n" +
+                $"bestTime={bestLevel4Time}\n" +
+                $"order={FormatOrder(bestLevel4Order)}\n" +
+                $"parameters={string.Join(", ", bestLevel4Parameters)}\n");
 
             Console.WriteLine($"Best level 4 time: {bestLevel4Time:F6} s");
             Console.WriteLine($"Best level 4 order: {FormatOrder(bestLevel4Order)}");
@@ -498,15 +533,22 @@ namespace Visualizer.FastestDescent
             var path = new MultiPath();
             for (int i = 0; i < points.Length - 1; i++)
             {
-                int startSlopeIndex = 2 * i;
-                int endSlopeIndex = 2 * (i + 1);
-                path.AddPath(new Cubic3DPath(
+                int startTangentIndex = 3 * i;
+                int endTangentIndex = 3 * (i + 1);
+                Vector startTangent = new(
+                    parameters[startTangentIndex],
+                    parameters[startTangentIndex + 1],
+                    parameters[startTangentIndex + 2]);
+                Vector endTangent = new(
+                    parameters[endTangentIndex],
+                    parameters[endTangentIndex + 1],
+                    parameters[endTangentIndex + 2]);
+
+                path.AddPath(new Cubic3DVectorPath(
                     points[i],
                     points[i + 1],
-                    parameters[startSlopeIndex],
-                    parameters[endSlopeIndex],
-                    parameters[startSlopeIndex + 1],
-                    parameters[endSlopeIndex + 1]));
+                    startTangent,
+                    endTangent));
             }
 
             var projectile = new ConstrainedProjectile(path.GetPosition(path.InitialParameter), Vector.NullVector(), 1, path);
@@ -521,7 +563,22 @@ namespace Visualizer.FastestDescent
 
         static private double[] InitializeLevel4Parameters(Vector[] points)
         {
-            double[] parameters = new double[2 * points.Length];
+            Vector[] secantTangents = GetLevel4SecantTangents(points);
+            double[] parameters = new double[3 * points.Length];
+
+            for (int i = 0; i < secantTangents.Length; i++)
+            {
+                parameters[3 * i] = secantTangents[i].X;
+                parameters[3 * i + 1] = secantTangents[i].Y;
+                parameters[3 * i + 2] = secantTangents[i].Z;
+            }
+
+            return parameters;
+        }
+
+        static private Vector[] GetLevel4SecantTangents(Vector[] points)
+        {
+            Vector[] tangents = new Vector[points.Length];
 
             for (int i = 0; i < points.Length; i++)
             {
@@ -544,19 +601,10 @@ namespace Visualizer.FastestDescent
                     nextPoint = points[i + 1];
                 }
 
-                double dx = nextPoint.X - prevPoint.X;
-                if (dx == 0)
-                {
-                    parameters[2 * i] = 0;
-                    parameters[2 * i + 1] = 0;
-                    continue;
-                }
-
-                parameters[2 * i] = (nextPoint.Y - prevPoint.Y) / dx;
-                parameters[2 * i + 1] = (nextPoint.Z - prevPoint.Z) / dx;
+                tangents[i] = nextPoint - prevPoint;
             }
 
-            return parameters;
+            return tangents;
         }
 
         static internal void VisualizeFastestDescent(params double[] parameters)
