@@ -13,6 +13,8 @@ namespace Visualizer.FastestDescent
     {
         static internal void RunFastestDescent()
         {
+            //level 1
+            //a must be 0
             double[] parameters = [0, 0, .1];
             // You will want to do your optimization here,
             // calling RunOnce() many times
