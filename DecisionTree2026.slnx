@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="background.dat" />
+    <File Path="decisionTreeData.dat" />
+    <File Path="signal.dat" />
+  </Folder>
+  <Project Path="DecisionTree/DecisionTree.csproj" />
+  <Project Path="DongUtility/DongUtility.csproj" />
+</Solution>
