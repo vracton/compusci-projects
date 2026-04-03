@@ -27,7 +27,7 @@ namespace Visualizer.FastestDescent
                 currentIndex = 0;
 
             Path currentPath = subPaths[currentIndex];
-            double pathParameter = parameter - currentIndex;
+            double pathParameter = Math.Clamp(parameter - currentIndex, 0, 1);
 
             return GetSubValue(currentPath, pathParameter);
         }

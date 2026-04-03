@@ -50,6 +50,7 @@ namespace PhysicsUtility.Kinematics
             var pathDerivative = Path.Derivative(Parameter);
             var parameterDerivative = Vector.Dot(Velocity, pathDerivative) / pathDerivative.MagnitudeSquared;
             var newParameter = Parameter + parameterDerivative * timeIncrement;
+            newParameter = Math.Clamp(newParameter, Path.InitialParameter, Path.FinalParameter);
 
             // Check the new position to make sure it isn't illegal
             var newPosition = Path.GetPosition(newParameter);
@@ -63,6 +64,7 @@ namespace PhysicsUtility.Kinematics
                 // Try a parameter that is smaller by the difference
                 double proportion = classicalDistanceSquared / distanceSquared;
                 newParameter = Parameter + (parameterDerivative * timeIncrement) * proportion;
+                newParameter = Math.Clamp(newParameter, Path.InitialParameter, Path.FinalParameter);
                 newPosition = Path.GetPosition(newParameter);
                 distanceSquared = Vector.Distance2(newPosition, Position);
                 classicalDistanceSquared = (Velocity * timeIncrement).MagnitudeSquared;
