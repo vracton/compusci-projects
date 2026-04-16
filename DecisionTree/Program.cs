@@ -1,4 +1,6 @@
-﻿namespace DecisionTree
+﻿using System.Drawing;
+
+namespace DecisionTree
 {
     internal static class Program
     {
@@ -6,11 +8,13 @@
         static void Main()
         {
             LevelI();
-            LevelIIAndBeyond();
+            //LevelII();
         }
 
         static void LevelI()
         {
+            double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
             // Load training samples
             var signal = DataSet.ReadDataSet(path + "signal.dat");
             var background = DataSet.ReadDataSet(path + "background.dat");
@@ -20,12 +24,40 @@
 
             int bestVariableIndex = -1;
             double bestSplitValue = 0;
+            double bestAccuracy = 0;
 
             // TODO: Insert code here that calculates the proper values of bestVariableIndex and bestSplitValue
+            CombinedData combined = new(signal, background);
 
+            for (int i = 0; i < data.Names.Length; i++)
+            {
+                var sorted = combined.SortedBy(i);
+                var sR = signal.Points.Count;
+                var bL = 0;
 
+                for (int n=0; n<sorted.Count; n++)
+                {
+                    if (sorted[n].isSignal)
+                    {
+                        sR--;
+                    }
+                    else
+                    {
+                        bL++;
+                    }
 
+                    double acc = (double)(sR + bL) / sorted.Count;
+                    if (acc > bestAccuracy)
+                    {
+                        bestAccuracy = acc;
+                        bestVariableIndex = i;
+                        bestSplitValue = sorted[n].val;
+                    }
+                }
 
+                Console.WriteLine($"{i + 1} done");
+            }
+            Console.WriteLine($"Accuracy: {bestAccuracy}, Best Variable Index {bestVariableIndex}, Best Split Value {bestSplitValue}");
 
             using var file = File.CreateText(path + "decisionTreeResultsLevelI.txt");
             file.WriteLine("Event\tPurity");
@@ -37,9 +69,11 @@
                 double output = data.Points[i].Variables[bestVariableIndex] > bestSplitValue ? 1 : 0;
                 file.WriteLine(i + "\t" + output);
             }
+
+            Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
 
-        static void LevelIIAndBeyond()
+        static void LevelII()
         {
             // Load training samples
             var signal = DataSet.ReadDataSet(path + "signal.dat");
@@ -54,7 +88,7 @@
             tree.Train(signal, background);
 
             // Calculate output value for each event and write to file
-            tree.MakeTextFile(path + "decisionTreeResults.txt", data);
+            tree.MakeTextFile(path + "decisionTreeResultsLevelII.txt", data);
         }
     }
 }
