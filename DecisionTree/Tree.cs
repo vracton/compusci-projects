@@ -11,6 +11,22 @@
         /// </summary>
         private readonly Leaf headnode;
 
+        public int NumLeaves
+        {
+            get
+            {
+                return 1 + headnode.NumChildren;
+            }
+        }
+
+        public int Depth
+        {
+            get
+            {
+                return 1 + headnode.RemainingDepth;
+            }
+        }
+
         public Tree()
         {
             headnode = new Leaf();

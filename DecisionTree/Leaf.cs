@@ -14,6 +14,34 @@
         /// A pointer to the next leaves, if this is a branch
         /// </summary>
         private Leaf? output2 = null;
+
+        public int NumChildren
+        {
+            get
+            {
+                int n = 0;
+                if (output1 != null)
+                {
+                    n += 1 + output1.NumChildren;
+                }
+                if (output2 != null)
+                {
+                    n += 1 + output2.NumChildren;
+                }
+                return n;
+            }
+        }
+
+        public int RemainingDepth
+        {
+            get
+            {
+                int d1 = output1?.RemainingDepth ?? 0;
+                int d2 = output2?.RemainingDepth ?? 0;
+                return 1 + Math.Max(d1, d2);
+            }
+        }
+
         /// <summary>
         /// The value of the cut that is applied at this branch (unneeded if it is a leaf)
         /// </summary>
@@ -178,23 +206,71 @@
         /// Chooses which variable and cut value to use
         /// </summary>
         /// <returns>True if a branch was created, false if this is a final leaf</returns>
+        /// 
+        //private double 
+
         private bool ChooseVariable(DataSet signal, DataSet background)
         {
-            // TODO set the values of variable and split here		
-            // Return true if you were able to find a useful variable, 
-            // and false if you were not and want to make a final leaf here
+            const int minPoints = 5;
+            if (signal.Points.Count <= minPoints || background.Points.Count <= minPoints) //arbitrary
+            {
+                return false;
+            }
 
-            // If you are going to branch, you should end with, for example:
+            CombinedData combined = new(signal, background);
 
-            // variable = 3; // The index number of the variable you want
-            // split = 2.55; // The value of the cut
-            // return true;
+            double highestGain = 0.0;
 
-            // Or if you cannot split usefully, you should
-            // return false;
-            // Make sure to do this or your code will run forever!
+            for (int varInd=0; varInd<signal.Names.Length; varInd++)
+            {
+                var sorted = combined.SortedBy(varInd);
 
-            throw new NotImplementedException();
+                double parPurity = 1.0 - (Math.Pow((double)signal.Points.Count / (double)(signal.Points.Count + background.Points.Count), 2) + Math.Pow((double)background.Points.Count / (double)(signal.Points.Count + background.Points.Count), 2));
+
+                int sR = signal.Points.Count;
+                int bR = background.Points.Count;
+
+
+                for (int i=0; i<sorted.Count-1; i++)
+                {
+                    if (sorted[i].isSignal)
+                    {
+                        sR--;
+
+                    }
+                    else
+                    {
+                        bR--;
+                    }
+
+                    if (sorted[i].val == sorted[i+1].val)
+                    {
+                        continue;
+                    }
+
+                    int sL = signal.Points.Count - sR;
+                    int bL = background.Points.Count - bR;
+
+                    double leftPurity = 1.0 - (Math.Pow((double)sL / (double)(sL + bL), 2) + Math.Pow((double)bL / (double)(sL + bL), 2));
+                    double rightPurity = 1.0 - (Math.Pow((double)sR / (double)(sR + bR), 2) + Math.Pow((double)bR / (double)(sR + bR), 2));
+                    double childPurity = (leftPurity * (sL + bL) + rightPurity * (sR + bR)) / (signal.Points.Count + background.Points.Count);
+                    double gain = parPurity - childPurity;
+
+                    if (gain > highestGain)
+                    {
+                        highestGain = gain;
+                        variable = varInd;
+                        split = sorted[i].val;
+                    }
+                }
+            }
+
+            if (highestGain <= 1e-6)
+            {
+                return false;
+            }
+
+            return true;
         }
 
     }

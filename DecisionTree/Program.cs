@@ -7,14 +7,16 @@ namespace DecisionTree
         private static readonly string path = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.Parent?.Parent?.FullName + '\\';
         static void Main()
         {
-            LevelI();
-            //LevelII();
+            double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            //LevelI();
+            LevelII();
+
+            Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
 
         static void LevelI()
         {
-            double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
             // Load training samples
             var signal = DataSet.ReadDataSet(path + "signal.dat");
             var background = DataSet.ReadDataSet(path + "background.dat");
@@ -29,13 +31,13 @@ namespace DecisionTree
             // TODO: Insert code here that calculates the proper values of bestVariableIndex and bestSplitValue
             CombinedData combined = new(signal, background);
 
-            for (int i = 0; i < data.Names.Length; i++)
+            for (int i = 0; i < signal.Names.Length; i++)
             {
                 var sorted = combined.SortedBy(i);
                 var sR = signal.Points.Count;
                 var bL = 0;
 
-                for (int n=0; n<sorted.Count; n++)
+                for (int n=0; n<sorted.Count-1; n++)
                 {
                     if (sorted[n].isSignal)
                     {
@@ -69,8 +71,6 @@ namespace DecisionTree
                 double output = data.Points[i].Variables[bestVariableIndex] > bestSplitValue ? 1 : 0;
                 file.WriteLine(i + "\t" + output);
             }
-
-            Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
 
         static void LevelII()
@@ -86,6 +86,20 @@ namespace DecisionTree
 
             // Train the tree
             tree.Train(signal, background);
+
+            CombinedData combined = new(signal, background);
+
+            int correct = 0;
+
+            foreach (var (p, isSignal) in combined.Points)
+            {
+                if ((tree.RunDataPoint(p) > 0.5) == isSignal)
+                {
+                    correct++;
+                }
+            }
+
+            Console.WriteLine($"Accuracy: {((double)correct / combined.Count):F4}, # Leaves: {tree.NumLeaves}, Depth: {tree.Depth}");
 
             // Calculate output value for each event and write to file
             tree.MakeTextFile(path + "decisionTreeResultsLevelII.txt", data);
