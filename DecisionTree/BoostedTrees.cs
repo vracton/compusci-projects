@@ -37,6 +37,8 @@ namespace DecisionTree
             {
                 iters++;
                 double avgAcc = 0.0;
+                double minAcc = double.MaxValue;
+                double maxAcc = double.MinValue;
 
                 extraDone += finishing ? 1 : 0;
 
@@ -57,7 +59,16 @@ namespace DecisionTree
                     allRuns[i].weights.Add(treeWeight);
                     allRuns[i].pointWeights = newWeights;
 
-                    avgAcc += GetAccuracy(new CombinedData(sValid, bValid), allRuns[i].trees, allRuns[i].weights);
+                    double foldAcc = GetAccuracy(new CombinedData(sValid, bValid), allRuns[i].trees, allRuns[i].weights);
+                    avgAcc += foldAcc;
+                    if (foldAcc < minAcc)
+                    {
+                        minAcc = foldAcc;
+                    }
+                    if (foldAcc > maxAcc)
+                    {
+                        maxAcc = foldAcc;
+                    }
                 }
 
                 avgAcc /= numSplits;
@@ -73,7 +84,7 @@ namespace DecisionTree
                     Console.WriteLine("Finishing...");
                 }
 
-                Console.WriteLine($"{iters} done, accuracy = {avgAcc}");
+                Console.WriteLine($"{iters} done, min accuracy = {minAcc}, max accuracy = {maxAcc}");
             }
 
 

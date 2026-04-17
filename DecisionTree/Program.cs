@@ -116,8 +116,8 @@ namespace DecisionTree
             var data = DataSet.ReadDataSet(path + "decisionTreeData.dat");
 
             var boostedTree = new BoostedTrees();
-            boostedTree.MaxDepth = 4;
-            boostedTree.MaxExtra = 50;
+            boostedTree.MaxDepth = 5;
+            boostedTree.MaxExtra = 2;
 
             boostedTree.Train(signal, background, 5);
 
