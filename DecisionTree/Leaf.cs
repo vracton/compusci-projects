@@ -152,10 +152,15 @@
         /// <summary>
         /// Trains this leaf based on input DataSets for signal and background
         /// </summary>
-        public void Train(DataSet signal, DataSet background, List<double> weights)
+        public void Train(DataSet signal, DataSet background, List<double> weights, int remainingDepth = int.MaxValue)
         {
             nSignal = signal.Points.Count;
             nBackground = background.Points.Count;
+
+            if (remainingDepth <= 0)
+            {
+                return;
+            }
 
             // Determines whether this is a final leaf or if it branches
             bool branch = ChooseVariable(signal, background, weights);
@@ -202,8 +207,8 @@
                 }
 
                 // Trains each of the resulting leaves
-                output1.Train(signalLeft, backgroundLeft, weightsLeft);
-                output2.Train(signalRight, backgroundRight, weightsRight);
+                output1.Train(signalLeft, backgroundLeft, weightsLeft, remainingDepth - 1);
+                output2.Train(signalRight, backgroundRight, weightsRight, remainingDepth - 1);
             }
             // Do nothing more if it is not a branch
         }
@@ -217,7 +222,7 @@
 
         private bool ChooseVariable(DataSet signal, DataSet background, List<double> weights)
         {
-            const int minPoints = 5;
+            const int minPoints = 50;
             if (signal.Points.Count <= minPoints || background.Points.Count <= minPoints) //arbitrary
             {
                 return false;
@@ -275,7 +280,7 @@
                 }
             }
 
-            if (highestGain <= 0.005)
+            if (highestGain <= 1e-6)
             {
                 return false;
             }

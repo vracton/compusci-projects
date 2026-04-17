@@ -53,7 +53,7 @@
         /// <summary>
         /// Trains the tree on signal and background samples
         /// </summary>
-        public void Train(DataSet signal, DataSet background)
+        public void Train(DataSet signal, DataSet background, int maxDepth = int.MaxValue)
         {
             int numPoints = (signal.Points.Count + background.Points.Count);
             List<double> pointWeights = new List<double>(numPoints);
@@ -61,12 +61,12 @@
             {
                 pointWeights.Add(1.0 / numPoints);
             }
-            headnode.Train(signal, background, pointWeights);
+            headnode.Train(signal, background, pointWeights, maxDepth);
         }
 
-        public void Train(DataSet signal, DataSet background, List<double> weights)
+        public void Train(DataSet signal, DataSet background, List<double> weights, int maxDepth = int.MaxValue)
         {
-            headnode.Train(signal, background, weights);
+            headnode.Train(signal, background, weights, maxDepth);
         }
 
         public double GetAccuracy(CombinedData data)
@@ -101,7 +101,7 @@
             
             double treeWeight = (1 - wrong) / wrong;
             List<double> newWeights = new();
-            Console.WriteLine(treeWeight);
+            
             double sum = 0.0;
             for (int i = 0; i < data.Points.Count; i++)
             {

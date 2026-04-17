@@ -9,7 +9,8 @@ namespace DecisionTree
         public List<Tree> Trees { get; private set; } = new List<Tree>();
         public List<double> Weights { get; private set; } = new List<double>();
 
-        private const int maxExtra = 5;
+        public int MaxExtra { get; set; } = 5;
+        public int MaxDepth { get; set; } = 5;
         public void Train(DataSet signal, DataSet background, int numSplits)
         {
             (List<Tree> trees, List<double> weights, List<double> pointWeights)[] allRuns = new (List<Tree>, List<double>, List<double>)[numSplits];
@@ -32,7 +33,7 @@ namespace DecisionTree
             bool finishing = false;
             int extraDone = 0;
             int iters = 0;
-            while (extraDone < maxExtra)
+            while (extraDone < MaxExtra)
             {
                 iters++;
                 double avgAcc = 0.0;
@@ -47,27 +48,9 @@ namespace DecisionTree
                     bTrain.AddDataPoints(background.RangeFrom((i + 1) * background.Points.Count / numSplits, background.Points.Count).Points);
                     DataSet sValid = signal.RangeFrom(i * signal.Points.Count / numSplits, (i + 1) * signal.Points.Count / numSplits);
                     DataSet bValid = background.RangeFrom(i * background.Points.Count / numSplits, (i + 1) * background.Points.Count / numSplits);
-                    //List<(double weight, int origInd)> trainWeights = new List<(double, int)>();
-
-                    //for (int j = 0; j < sTrain.Points.Count; j++)
-                    //{
-                    //    trainWeights.Add((allRuns[i].pointWeights[j], j));
-                    //}
-                    //for (int j = (i+1)*signal.Points.Count / numSplits; j < signal.Points.Count; j++ )
-                    //{
-                    //    trainWeights.Add((allRuns[i].pointWeights[j], j));
-                    //}
-                    //for (int j = 0; j < bTrain.Points.Count; j++)
-                    //{
-                    //    trainWeights.Add((allRuns[i].pointWeights[j + signal.Points.Count], j));
-                    //}
-                    //for (int j = (i + 1) * background.Points.Count / numSplits; j < background.Points.Count; j++)
-                    //{
-                    //    trainWeights.Add((allRuns[i].pointWeights[j + signal.Points.Count], j));
-                    //}
 
                     Tree t = new Tree();
-                    t.Train(sTrain, bTrain, allRuns[i].pointWeights);
+                    t.Train(sTrain, bTrain, allRuns[i].pointWeights, MaxDepth);
 
                     allRuns[i].trees.Add(t);
                     (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(sTrain, bTrain), allRuns[i].pointWeights);
@@ -78,7 +61,7 @@ namespace DecisionTree
                 }
 
                 avgAcc /= numSplits;
-
+                
                 if (avgAcc > bestAcc)
                 {
                     bestAcc = avgAcc;
@@ -90,7 +73,7 @@ namespace DecisionTree
                     Console.WriteLine("Finishing...");
                 }
 
-                Console.WriteLine($"{iters} done");
+                Console.WriteLine($"{iters} done, accuracy = {avgAcc}");
             }
 
 
@@ -106,7 +89,7 @@ namespace DecisionTree
             for (int i = 0; i < bestNumTrees; i++)
             {
                 Tree t = new Tree();
-                t.Train(signal, background, pointWeights);
+                t.Train(signal, background, pointWeights, MaxDepth);
 
                 (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(signal, background), pointWeights);
 
