@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DecisionTree/DecisionTree.csproj" />
+  <Project Path="DongUtility/DongUtility.csproj" />
+  <Project Path="PointGenerator/PointGenerator.csproj" />
+</Solution>
