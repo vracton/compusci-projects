@@ -10,8 +10,8 @@ namespace DecisionTree
             double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             //LevelI();
-            LevelII();
-            //LevelIII();
+            //LevelII();
+            LevelIII();
 
             Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
@@ -116,15 +116,15 @@ namespace DecisionTree
             var data = DataSet.ReadDataSet(path + "decisionTreeData.dat");
 
             var boostedTree = new BoostedTrees();
-            boostedTree.MaxDepth = 5;
-            boostedTree.MaxExtra = 5;
+            boostedTree.MaxDepth = 4;
+            boostedTree.MaxExtra = 50;
 
             boostedTree.Train(signal, background, 5);
 
             Console.WriteLine($"Accuracy: {boostedTree.GetAccuracy(signal, background):F4}");
 
             //// Calculate output value for each event and write to file
-            //tree.MakeTextFile(path + "decisionTreeResultsLevelIII.txt", data);
+            boostedTree.MakeTextFile(path + "decisionTreeResultsLevelIII.txt", data);
         }
     }
 }

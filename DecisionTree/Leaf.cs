@@ -119,7 +119,11 @@
         /// <summary>
         /// The purity of the leaf
         /// </summary>
-        public double Purity => (double)nSignal / (nSignal + nBackground);
+        /// 
+
+        private double wSignal = 0.0;
+        private double wBackground = 0.0;
+        public double Purity => (double)wSignal / (wSignal + wBackground);
 
         /// <summary>
         /// Calculates the return value for a single data point, forwarding it to other leaves as needed
@@ -156,6 +160,8 @@
         {
             nSignal = signal.Points.Count;
             nBackground = background.Points.Count;
+            wSignal = weights.Take(nSignal).Sum();
+            wBackground = weights.Skip(nSignal).Take(nBackground).Sum();
 
             if (remainingDepth <= 0)
             {
@@ -222,7 +228,7 @@
 
         private bool ChooseVariable(DataSet signal, DataSet background, List<double> weights)
         {
-            const int minPoints = 50;
+            const int minPoints = 100;
             if (signal.Points.Count <= minPoints || background.Points.Count <= minPoints) //arbitrary
             {
                 return false;

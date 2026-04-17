@@ -130,5 +130,26 @@ namespace DecisionTree
 
             return (double)correct / combined.Count;
         }
+
+        public void MakeTextFile(string filename, DataSet data)
+        {
+            using var file = File.CreateText(filename);
+            file.WriteLine("Event\tScore");
+
+            int a = 0;
+            for (int i = 0; i < data.Points.Count; ++i)
+            {
+                double output = 0.0;
+                for (int j = 0; j < Trees.Count; j++)
+                {
+                    output += Math.Log(Weights[j]) * (Trees[j].RunDataPoint(data.Points[i]) > 0.5 ? 1 : 0);
+                }
+                //if ((output > 0.5 * Weights.Sum(w => Math.Log(w))))
+                //{
+                //    a++;
+                //}
+                file.WriteLine(i + "\t" + output);
+            }
+        }
     }
 }
