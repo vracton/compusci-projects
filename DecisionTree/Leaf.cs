@@ -152,13 +152,13 @@
         /// <summary>
         /// Trains this leaf based on input DataSets for signal and background
         /// </summary>
-        public void Train(DataSet signal, DataSet background)
+        public void Train(DataSet signal, DataSet background, List<double> weights)
         {
             nSignal = signal.Points.Count;
             nBackground = background.Points.Count;
 
             // Determines whether this is a final leaf or if it branches
-            bool branch = ChooseVariable(signal, background);
+            bool branch = ChooseVariable(signal, background, weights);
 
             if (branch)
             {
@@ -170,34 +170,40 @@
                 DataSet signalRight = new(signal.Names);
                 DataSet backgroundLeft = new(background.Names);
                 DataSet backgroundRight = new(background.Names);
+                List<double> weightsLeft = new();
+                List<double> weightsRight = new();
 
-                foreach (var dataPoint in signal.Points)
+                for (int i =0; i<nSignal; i++)
                 {
-                    if (DoSplit(dataPoint))
+                    if (DoSplit(signal.Points[i]))
                     {
-                        signalLeft.AddDataPoint(dataPoint);
+                        signalLeft.AddDataPoint(signal.Points[i]);
+                        weightsLeft.Add(weights[i]);
                     }
                     else
                     {
-                        signalRight.AddDataPoint(dataPoint);
+                        signalRight.AddDataPoint(signal.Points[i]);
+                        weightsRight.Add(weights[i]);
                     }
                 }
 
-                foreach (var dataPoint in background.Points)
+                for (int i = 0; i<nBackground; i++)
                 {
-                    if (DoSplit(dataPoint))
+                    if (DoSplit(background.Points[i]))
                     {
-                        backgroundLeft.AddDataPoint(dataPoint);
+                        backgroundLeft.AddDataPoint(background.Points[i]);
+                        weightsLeft.Add(weights[i + nSignal]);
                     }
                     else
                     {
-                        backgroundRight.AddDataPoint(dataPoint);
+                        backgroundRight.AddDataPoint(background.Points[i]);
+                        weightsRight.Add(weights[i + nSignal]);
                     }
                 }
 
                 // Trains each of the resulting leaves
-                output1.Train(signalLeft, backgroundLeft);
-                output2.Train(signalRight, backgroundRight);
+                output1.Train(signalLeft, backgroundLeft, weightsLeft);
+                output2.Train(signalRight, backgroundRight, weightsRight);
             }
             // Do nothing more if it is not a branch
         }
@@ -209,7 +215,7 @@
         /// 
         //private double 
 
-        private bool ChooseVariable(DataSet signal, DataSet background)
+        private bool ChooseVariable(DataSet signal, DataSet background, List<double> weights)
         {
             const int minPoints = 5;
             if (signal.Points.Count <= minPoints || background.Points.Count <= minPoints) //arbitrary
@@ -223,24 +229,31 @@
 
             for (int varInd=0; varInd<signal.Names.Length; varInd++)
             {
-                var sorted = combined.SortedBy(varInd);
+                var sorted = combined.SortedByWithWeights(varInd, weights);
 
-                double parPurity = 1.0 - (Math.Pow((double)signal.Points.Count / (double)(signal.Points.Count + background.Points.Count), 2) + Math.Pow((double)background.Points.Count / (double)(signal.Points.Count + background.Points.Count), 2));
+                double totalWeight = weights.Sum(); //should be 1.0
+                double signalWeight = weights.Take(signal.Points.Count).Sum();
+                double bgWeight = totalWeight - signalWeight;
 
-                int sR = signal.Points.Count;
-                int bR = background.Points.Count;
+                double parPurity = 1.0 - (Math.Pow(signalWeight / totalWeight, 2) + Math.Pow(bgWeight / totalWeight, 2));
 
+                double sR = signalWeight;
+                double bR = bgWeight;
+                double sL = 0.0;
+                double bL = 0.0;
 
                 for (int i=0; i<sorted.Count-1; i++)
                 {
                     if (sorted[i].isSignal)
                     {
-                        sR--;
+                        sR-=sorted[i].weight;
+                        sL+=sorted[i].weight;
 
                     }
                     else
                     {
-                        bR--;
+                        bR-=sorted[i].weight;
+                        bL+=sorted[i].weight;
                     }
 
                     if (sorted[i].val == sorted[i+1].val)
@@ -248,12 +261,9 @@
                         continue;
                     }
 
-                    int sL = signal.Points.Count - sR;
-                    int bL = background.Points.Count - bR;
-
                     double leftPurity = 1.0 - (Math.Pow((double)sL / (double)(sL + bL), 2) + Math.Pow((double)bL / (double)(sL + bL), 2));
                     double rightPurity = 1.0 - (Math.Pow((double)sR / (double)(sR + bR), 2) + Math.Pow((double)bR / (double)(sR + bR), 2));
-                    double childPurity = (leftPurity * (sL + bL) + rightPurity * (sR + bR)) / (signal.Points.Count + background.Points.Count);
+                    double childPurity = (leftPurity * (sL + bL) + rightPurity * (sR + bR)) / (signalWeight + bgWeight);
                     double gain = parPurity - childPurity;
 
                     if (gain > highestGain)
@@ -265,7 +275,7 @@
                 }
             }
 
-            if (highestGain <= 1e-6)
+            if (highestGain <= 0.005)
             {
                 return false;
             }

@@ -24,6 +24,18 @@
             Points.Add(point);
         }
 
+        public void AddDataPoints(IEnumerable<DataPoint> points)
+        {
+            Points.AddRange(points);
+        }
+
+        public DataSet RangeFrom(int start, int end)
+        {
+            var ds = new DataSet(Names);
+            ds.AddDataPoints(Points.GetRange(start, end - start));
+            return ds;
+        }
+
         private const string header = "DecisionTreeDataSet";
 
         /// <summary>
