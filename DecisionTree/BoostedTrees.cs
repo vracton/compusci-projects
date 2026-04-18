@@ -97,7 +97,7 @@ namespace DecisionTree
 
                 if (!finishing && validationHistory.Count > MaxExtra)
                 {
-                    double priorAccuracy = validationHistory[validationHistory.Count - 1 - MaxExtra];
+                    double priorAccuracy = validationHistory[validationHistory.Count - 3];
                     if (avgAcc < priorAccuracy + 0.02)
                     {
                         finishing = true;
