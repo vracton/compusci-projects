@@ -32,6 +32,19 @@
             }
         }
 
+        public int BranchCount
+        {
+            get
+            {
+                if (IsFinal)
+                {
+                    return 0;
+                }
+
+                return 1 + (output1?.BranchCount ?? 0) + (output2?.BranchCount ?? 0);
+            }
+        }
+
         public int RemainingDepth
         {
             get
@@ -177,7 +190,7 @@
         /// <summary>
         /// Trains this leaf based on input DataSets for signal and background
         /// </summary>
-        public void Train(DataSet signal, DataSet background, List<double> weights, int remainingDepth = int.MaxValue)
+        public void Train(DataSet signal, DataSet background, List<double> weights, int remainingDepth = int.MaxValue, bool usePruning = false)
         {
             nSignal = signal.Points.Count;
             nBackground = background.Points.Count;
@@ -190,7 +203,7 @@
             }
 
             // Determines whether this is a final leaf or if it branches
-            bool branch = ChooseVariable(signal, background, weights);
+            bool branch = ChooseVariable(signal, background, weights, usePruning);
 
             if (branch)
             {
@@ -234,8 +247,8 @@
                 }
 
                 // Trains each of the resulting leaves
-                output1.Train(signalLeft, backgroundLeft, weightsLeft, remainingDepth - 1);
-                output2.Train(signalRight, backgroundRight, weightsRight, remainingDepth - 1);
+                output1.Train(signalLeft, backgroundLeft, weightsLeft, remainingDepth - 1, usePruning);
+                output2.Train(signalRight, backgroundRight, weightsRight, remainingDepth - 1, usePruning);
             }
             // Do nothing more if it is not a branch
         }
@@ -247,10 +260,10 @@
         /// 
         //private double 
 
-        private bool ChooseVariable(DataSet signal, DataSet background, List<double> weights)
+        private bool ChooseVariable(DataSet signal, DataSet background, List<double> weights, bool usePruning)
         {
             const int minPoints = 100;
-            if (signal.Points.Count <= minPoints || background.Points.Count <= minPoints) //arbitrary
+            if (!usePruning && (signal.Points.Count <= minPoints || background.Points.Count <= minPoints)) //arbitrary
             {
                 return false;
             }

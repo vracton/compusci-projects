@@ -97,7 +97,7 @@ namespace DecisionTree
 
                 if (!finishing && validationHistory.Count > MaxExtra)
                 {
-                    double priorAccuracy = validationHistory[validationHistory.Count - 3];
+                    double priorAccuracy = validationHistory[validationHistory.Count - 1 - MaxExtra];
                     if (avgAcc < priorAccuracy + 0.02)
                     {
                         finishing = true;
@@ -122,6 +122,10 @@ namespace DecisionTree
             double avgLeavesAfter = 0.0;
             double avgDepthBefore = 0.0;
             double avgDepthAfter = 0.0;
+            int totalLeavesBefore = 0;
+            int totalLeavesAfter = 0;
+            int totalBranchesBefore = 0;
+            int totalBranchesAfter = 0;
 
             for (int i = 0; i < bestNumTrees; i++)
             {
@@ -131,12 +135,16 @@ namespace DecisionTree
                 {
                     avgLeavesBefore += t.NumLeaves;
                     avgDepthBefore += t.Depth;
+                    totalLeavesBefore += t.NumLeaves;
+                    totalBranchesBefore += t.BranchCount;
                 }
                 if (UsePruning && i < bestPruneAlphas.Count)
                 {
                     t.Prune(bestPruneAlphas[i]);
                     avgLeavesAfter += t.NumLeaves;
                     avgDepthAfter += t.Depth;
+                    totalLeavesAfter += t.NumLeaves;
+                    totalBranchesAfter += t.BranchCount;
                 }
 
                 (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(signal, background), pointWeights);
@@ -149,6 +157,7 @@ namespace DecisionTree
             if (UsePruning && bestNumTrees > 0)
             {
                 Console.WriteLine($"Final model avg leaves before/after = {avgLeavesBefore / bestNumTrees:F1}/{avgLeavesAfter / bestNumTrees:F1}, avg depth before/after = {avgDepthBefore / bestNumTrees:F1}/{avgDepthAfter / bestNumTrees:F1}");
+                Console.WriteLine($"Final model total leaves before/after = {totalLeavesBefore}/{totalLeavesAfter}, total branches before/after = {totalBranchesBefore}/{totalBranchesAfter}");
             }
         }
 

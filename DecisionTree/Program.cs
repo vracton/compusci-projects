@@ -11,8 +11,8 @@ namespace DecisionTree
 
             //LevelI();
             //LevelII();
-            //LevelIII();
-            LevelIV();
+            LevelIII();
+            //LevelIV();
 
             Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
@@ -145,7 +145,9 @@ namespace DecisionTree
             boostedTree.Train(signal, background, 5);
 
             Console.WriteLine($"Accuracy: {boostedTree.GetAccuracy(signal, background):F4}");
-            //avg leaves 13.1 -> 11.9
+            //avg leaves 15.9 -> 12.5
+            //leaves 350 -> 275
+            //branches 328 -> 253
 
             //// Calculate output value for each event and write to file
             boostedTree.MakeTextFile(path + "decisionTreeResultsLevelIV.txt", data);

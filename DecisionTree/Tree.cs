@@ -27,6 +27,14 @@
             }
         }
 
+        public int BranchCount
+        {
+            get
+            {
+                return headnode.BranchCount;
+            }
+        }
+
         public int Depth
         {
             get
@@ -66,7 +74,7 @@
         /// <summary>
         /// Trains the tree on signal and background samples
         /// </summary>
-        public void Train(DataSet signal, DataSet background, int maxDepth = int.MaxValue)
+        public void Train(DataSet signal, DataSet background, int maxDepth = int.MaxValue, bool usePruning = false)
         {
             int numPoints = (signal.Points.Count + background.Points.Count);
             List<double> pointWeights = new List<double>(numPoints);
@@ -74,12 +82,12 @@
             {
                 pointWeights.Add(1.0 / numPoints);
             }
-            headnode.Train(signal, background, pointWeights, maxDepth);
+            headnode.Train(signal, background, pointWeights, maxDepth, usePruning);
         }
 
-        public void Train(DataSet signal, DataSet background, List<double> weights, int maxDepth = int.MaxValue)
+        public void Train(DataSet signal, DataSet background, List<double> weights, int maxDepth = int.MaxValue, bool usePruning = false)
         {
-            headnode.Train(signal, background, weights, maxDepth);
+            headnode.Train(signal, background, weights, maxDepth, usePruning);
         }
 
         public double GetAccuracy(CombinedData data)
