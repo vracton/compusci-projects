@@ -8,6 +8,7 @@ namespace DecisionTree
     {
         public List<Tree> Trees { get; private set; } = new List<Tree>();
         public List<double> Weights { get; private set; } = new List<double>();
+        public bool UsePruning { get; set; } = false;
 
         public int MaxExtra { get; set; } = 5;
         public int MaxDepth { get; set; } = 5;
@@ -30,6 +31,8 @@ namespace DecisionTree
 
             double bestAcc = 0.0;
             int bestNumTrees = 0;
+            List<double> pruneAlphas = new();
+            List<double> bestPruneAlphas = new();
             bool finishing = false;
             int extraDone = 0;
             int iters = 0;
@@ -39,6 +42,7 @@ namespace DecisionTree
                 double avgAcc = 0.0;
                 double minAcc = double.MaxValue;
                 double maxAcc = double.MinValue;
+                double alphaSum = 0.0;
 
                 extraDone += finishing ? 1 : 0;
 
@@ -53,6 +57,10 @@ namespace DecisionTree
 
                     Tree t = new Tree();
                     t.Train(sTrain, bTrain, allRuns[i].pointWeights, MaxDepth);
+                    if (UsePruning)
+                    {
+                        alphaSum += t.PruneForValidation(new CombinedData(sValid, bValid));
+                    }
 
                     allRuns[i].trees.Add(t);
                     (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(sTrain, bTrain), allRuns[i].pointWeights);
@@ -72,11 +80,16 @@ namespace DecisionTree
                 }
 
                 avgAcc /= numSplits;
+                if (UsePruning)
+                {
+                    pruneAlphas.Add(alphaSum / numSplits);
+                }
                 
                 if (avgAcc > bestAcc)
                 {
                     bestAcc = avgAcc;
                     bestNumTrees = allRuns[0].trees.Count;
+                    bestPruneAlphas = [.. pruneAlphas];
                 } 
                 else if (!finishing)
                 {
@@ -101,6 +114,10 @@ namespace DecisionTree
             {
                 Tree t = new Tree();
                 t.Train(signal, background, pointWeights, MaxDepth);
+                if (UsePruning && i < bestPruneAlphas.Count)
+                {
+                    t.Prune(bestPruneAlphas[i]);
+                }
 
                 (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(signal, background), pointWeights);
 

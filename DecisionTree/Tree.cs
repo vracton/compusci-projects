@@ -11,11 +11,19 @@
         /// </summary>
         private readonly Leaf headnode;
 
-        public int NumLeaves
+        public int NumChildren
         {
             get
             {
                 return 1 + headnode.NumChildren;
+            }
+        }
+        
+        public int NumLeaves
+        {
+            get
+            {
+                return headnode.LeafCount;
             }
         }
 
@@ -30,6 +38,11 @@
         public Tree()
         {
             headnode = new Leaf();
+        }
+
+        private Tree(Leaf headnode)
+        {
+            this.headnode = headnode;
         }
 
         /// <summary>
@@ -132,6 +145,46 @@
         public double RunDataPoint(DataPoint dp)
         {
             return headnode.RunDataPoint(dp);
+        }
+
+        public Tree Clone()
+        {
+            return new Tree(headnode.Clone());
+        }
+
+        public void Prune(double alpha)
+        {
+            headnode.PruneAtAlpha(alpha);
+        }
+
+        public double PruneForValidation(CombinedData validation)
+        {
+            var candidateAlphas = new List<double>();
+            headnode.CollectEffectiveAlphas(candidateAlphas);
+            candidateAlphas = candidateAlphas
+                .Where(alpha => alpha > 0.0)
+                .Distinct()
+                .OrderBy(alpha => alpha)
+                .ToList();
+
+            double bestAlpha = 0.0;
+            double bestAccuracy = GetAccuracy(validation);
+
+            foreach (double alpha in candidateAlphas)
+            {
+                var candidate = Clone();
+                candidate.Prune(alpha);
+
+                double accuracy = candidate.GetAccuracy(validation);
+                if (accuracy > bestAccuracy)
+                {
+                    bestAccuracy = accuracy;
+                    bestAlpha = alpha;
+                }
+            }
+
+            Prune(bestAlpha);
+            return bestAlpha;
         }
 
         public void MakeTextFile(string filename, DataSet data)

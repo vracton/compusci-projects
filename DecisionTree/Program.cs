@@ -10,8 +10,9 @@ namespace DecisionTree
             double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             //LevelI();
-            //LevelII();
-            LevelIII();
+            LevelII();
+            //LevelIII();
+            //LevelIV();
 
             Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
         }
@@ -117,7 +118,7 @@ namespace DecisionTree
 
             var boostedTree = new BoostedTrees();
             boostedTree.MaxDepth = 5;
-            boostedTree.MaxExtra = 2;
+            boostedTree.MaxExtra = 3;
 
             boostedTree.Train(signal, background, 5);
 
@@ -125,6 +126,28 @@ namespace DecisionTree
 
             //// Calculate output value for each event and write to file
             boostedTree.MakeTextFile(path + "decisionTreeResultsLevelIII.txt", data);
+        }
+
+        static void LevelIV()
+        {
+            // Load training samples
+            var signal = DataSet.ReadDataSet(path + "signal.dat");
+            var background = DataSet.ReadDataSet(path + "background.dat");
+
+            // Load data sample
+            var data = DataSet.ReadDataSet(path + "decisionTreeData.dat");
+
+            var boostedTree = new BoostedTrees();
+            boostedTree.MaxDepth = 5;
+            boostedTree.MaxExtra = 2;
+            boostedTree.UsePruning = true;
+
+            boostedTree.Train(signal, background, 5);
+
+            Console.WriteLine($"Accuracy: {boostedTree.GetAccuracy(signal, background):F4}");
+
+            //// Calculate output value for each event and write to file
+            boostedTree.MakeTextFile(path + "decisionTreeResultsLevelIV.txt", data);
         }
     }
 }

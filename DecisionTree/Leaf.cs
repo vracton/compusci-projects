@@ -84,6 +84,8 @@
             bw.Write(split);
             bw.Write(nSignal);
             bw.Write(nBackground);
+            bw.Write(wSignal);
+            bw.Write(wBackground);
 
             bw.Write(IsFinal);
             if (!IsFinal)
@@ -102,6 +104,8 @@
             split = br.ReadDouble();
             nSignal = br.ReadInt32();
             nBackground = br.ReadInt32();
+            wSignal = br.ReadDouble();
+            wBackground = br.ReadDouble();
 
             bool fin = br.ReadBoolean();
             if (!fin)
@@ -124,6 +128,23 @@
         private double wSignal = 0.0;
         private double wBackground = 0.0;
         public double Purity => (double)wSignal / (wSignal + wBackground);
+        internal double LeafRisk
+        {
+            get
+            {
+                double total = wSignal + wBackground;
+                if (total <= 0.0)
+                {
+                    return 0.0;
+                }
+                double gini = 1.0 - (Math.Pow(wSignal / (wSignal + wBackground), 2) + Math.Pow(wBackground / (wSignal + wBackground), 2));
+                return total * gini;
+            }
+        }
+
+        internal int LeafCount => IsFinal ? 1 : (output1?.LeafCount ?? 0) + (output2?.LeafCount ?? 0);
+
+        internal double SubtreeRisk => IsFinal ? LeafRisk : (output1?.SubtreeRisk ?? 0.0) + (output2?.SubtreeRisk ?? 0.0);
 
         /// <summary>
         /// Calculates the return value for a single data point, forwarding it to other leaves as needed
@@ -292,6 +313,78 @@
             }
 
             return true;
+        }
+
+        internal void CollectEffectiveAlphas(List<double> alphas)
+        {
+            if (IsFinal)
+            {
+                return;
+            }
+
+            double effectiveAlpha = EffectiveAlpha;
+            if (!double.IsNaN(effectiveAlpha) && !double.IsInfinity(effectiveAlpha) && effectiveAlpha >= 0.0)
+            {
+                alphas.Add(effectiveAlpha);
+            }
+
+            output1?.CollectEffectiveAlphas(alphas);
+            output2?.CollectEffectiveAlphas(alphas);
+        }
+
+        internal void PruneAtAlpha(double alpha)
+        {
+            if (IsFinal)
+            {
+                return;
+            }
+
+            output1?.PruneAtAlpha(alpha);
+            output2?.PruneAtAlpha(alpha);
+
+            if (!IsFinal && EffectiveAlpha < alpha)
+            {
+                output1 = null;
+                output2 = null;
+            }
+        }
+
+        internal Leaf Clone()
+        {
+            var copy = new Leaf(variable, split)
+            {
+                nSignal = nSignal,
+                nBackground = nBackground,
+                wSignal = wSignal,
+                wBackground = wBackground
+            };
+
+            if (!IsFinal)
+            {
+                copy.output1 = output1?.Clone();
+                copy.output2 = output2?.Clone();
+            }
+
+            return copy;
+        }
+
+        private double EffectiveAlpha
+        {
+            get
+            {
+                if (IsFinal)
+                {
+                    return double.PositiveInfinity;
+                }
+
+                int prunedLeaves = LeafCount;
+                if (prunedLeaves <= 1)
+                {
+                    return double.PositiveInfinity;
+                }
+
+                return (LeafRisk - SubtreeRisk) / (prunedLeaves - 1);
+            }
         }
 
     }
