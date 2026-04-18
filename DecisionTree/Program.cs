@@ -10,8 +10,8 @@ namespace DecisionTree
             double startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             //LevelI();
-            LevelII();
-            //LevelIII();
+            //LevelII();
+            LevelIII();
             //LevelIV();
 
             Console.WriteLine($"Finished in {(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000.0} seconds");
@@ -117,8 +117,8 @@ namespace DecisionTree
             var data = DataSet.ReadDataSet(path + "decisionTreeData.dat");
 
             var boostedTree = new BoostedTrees();
-            boostedTree.MaxDepth = 5;
-            boostedTree.MaxExtra = 3;
+            boostedTree.MaxDepth = 4;
+            boostedTree.MaxExtra = 4;
 
             boostedTree.Train(signal, background, 5);
 

@@ -12,6 +12,7 @@ namespace DecisionTree
 
         public int MaxExtra { get; set; } = 5;
         public int MaxDepth { get; set; } = 5;
+        public int MaxTrees { get; set; } = int.MaxValue;
         public void Train(DataSet signal, DataSet background, int numSplits)
         {
             (List<Tree> trees, List<double> weights, List<double> pointWeights)[] allRuns = new (List<Tree>, List<double>, List<double>)[numSplits];
@@ -33,10 +34,11 @@ namespace DecisionTree
             int bestNumTrees = 0;
             List<double> pruneAlphas = new();
             List<double> bestPruneAlphas = new();
+            List<double> validationHistory = new();
             bool finishing = false;
             int extraDone = 0;
             int iters = 0;
-            while (extraDone < MaxExtra)
+            while (extraDone < MaxExtra && iters < MaxTrees)
             {
                 iters++;
                 double avgAcc = 0.0;
@@ -80,6 +82,7 @@ namespace DecisionTree
                 }
 
                 avgAcc /= numSplits;
+                validationHistory.Add(avgAcc);
                 if (UsePruning)
                 {
                     pruneAlphas.Add(alphaSum / numSplits);
@@ -90,11 +93,16 @@ namespace DecisionTree
                     bestAcc = avgAcc;
                     bestNumTrees = allRuns[0].trees.Count;
                     bestPruneAlphas = [.. pruneAlphas];
-                } 
-                else if (!finishing)
+                }
+
+                if (!finishing && validationHistory.Count > MaxExtra)
                 {
-                    finishing = true;
-                    Console.WriteLine("Finishing...");
+                    double priorAccuracy = validationHistory[validationHistory.Count - 1 - MaxExtra];
+                    if (avgAcc < priorAccuracy + 0.02)
+                    {
+                        finishing = true;
+                        Console.WriteLine("Finishing...");
+                    }
                 }
 
                 Console.WriteLine($"{iters} done, min accuracy = {minAcc}, max accuracy = {maxAcc}");
@@ -110,13 +118,25 @@ namespace DecisionTree
 
             //Weights.Add(1.0);
 
+            double avgLeavesBefore = 0.0;
+            double avgLeavesAfter = 0.0;
+            double avgDepthBefore = 0.0;
+            double avgDepthAfter = 0.0;
+
             for (int i = 0; i < bestNumTrees; i++)
             {
                 Tree t = new Tree();
                 t.Train(signal, background, pointWeights, MaxDepth);
+                if (UsePruning)
+                {
+                    avgLeavesBefore += t.NumLeaves;
+                    avgDepthBefore += t.Depth;
+                }
                 if (UsePruning && i < bestPruneAlphas.Count)
                 {
                     t.Prune(bestPruneAlphas[i]);
+                    avgLeavesAfter += t.NumLeaves;
+                    avgDepthAfter += t.Depth;
                 }
 
                 (List<double> newWeights, double treeWeight) = t.GetWeighted(new CombinedData(signal, background), pointWeights);
@@ -124,6 +144,11 @@ namespace DecisionTree
                 Trees.Add(t);
                 Weights.Add(treeWeight);
                 pointWeights = newWeights;
+            }
+
+            if (UsePruning && bestNumTrees > 0)
+            {
+                Console.WriteLine($"Final model avg leaves before/after = {avgLeavesBefore / bestNumTrees:F1}/{avgLeavesAfter / bestNumTrees:F1}, avg depth before/after = {avgDepthBefore / bestNumTrees:F1}/{avgDepthAfter / bestNumTrees:F1}");
             }
         }
 
