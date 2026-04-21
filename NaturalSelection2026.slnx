@@ -6,7 +6,7 @@
   </Configurations>
   <Folder Name="/Framework/">
     <Project Path="Arena/Arena.csproj" />
-    <Project Path="ArenaCore/ArenaCore.vcxproj" />
+    <Project Path="ArenaCore/ArenaCore.vcxproj" Id="e1a45400-7964-45e7-82d6-69d973d897d4" />
     <Project Path="ArenaVisualizer/ArenaVisualizer.csproj" />
     <Project Path="DongUtility/DongUtility.csproj" />
     <Project Path="Geometry/Geometry.csproj" />
