@@ -1,0 +1,24 @@
+﻿<motionvisualizer:MotionVisualizerBase x:Class="ArenaVisualizer.MainArenaVisualizer"
+             x:TypeArguments="local:ArenaCoreInterface,local:GraphicTurnAdapter"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ArenaVisualizer"
+             xmlns:graphcontrol="clr-namespace:GraphControl;assembly=GraphControl"
+             xmlns:motionvisualizer="clr-namespace:MotionVisualizer;assembly=MotionVisualizer"
+             xmlns:arena="clr-namespace:Arena;assembly=Arena"
+             mc:Ignorable="d"
+             HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+             <!--MouseWheel="MyViewport_MouseWheel"--> 
+            
+    <Grid Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="7*" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+        <ContentControl Grid.Column="0" Name="ArenaViewport"></ContentControl>
+        <ContentControl BorderBrush="Gray" BorderThickness="0 3 3 3" Grid.Column="1" Name="GraphSpot" Background="Gray"/>
+    </Grid>
+</motionvisualizer:MotionVisualizerBase>

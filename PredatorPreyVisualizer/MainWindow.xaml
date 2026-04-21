@@ -1,0 +1,43 @@
+﻿<Window x:Class="PredatorPreyVisualizer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PredatorPreyVisualizer"
+        mc:Ignorable="d"
+        Title="MainWindow" WindowState="Maximized">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="35" />
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Background="Gray" Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Name="Start_Button" Click="Start_Button_Click"  Grid.Column="0">
+                    Start
+                </Button>
+
+                <StackPanel Orientation="Horizontal" Grid.Column="2">
+                    <TextBlock Text="Time increment (s)" VerticalAlignment="Center" Margin="10" />
+                    <TextBox Name="TimeIncrementSlider" TextChanged="TimeIncrementSlider_TextChanged"  Width="40" Margin="10"/>
+
+                    <TextBlock Text="Time: " VerticalAlignment="Center" Margin="10" />
+                    <TextBlock x:Name="TimeText" Text="0 s" VerticalAlignment="Center"/>
+
+                    <!--<TextBlock Text="Slow" VerticalAlignment="Center" />
+                    <CheckBox Name="SlowDrawCheckBox" Width="15" Click="SlowDrawCheckBox_Click"  IsChecked="False"
+                          VerticalAlignment="Center" Margin="10"/>-->
+                </StackPanel>
+            </Grid>
+
+
+            <ContentControl Name="ArenaSpot" Background="Black" Grid.Row="1"></ContentControl>
+        </Grid>
+    </Grid>
+</Window>
