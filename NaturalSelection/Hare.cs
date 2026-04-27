@@ -51,7 +51,7 @@ namespace NaturalSelection
                     return Mate(ani);
                 }
             }
-
+            
             if (FoodInCurrentCell() > 5)
             {
                 return HerbivoreEat();
