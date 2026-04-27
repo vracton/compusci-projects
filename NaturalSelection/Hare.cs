@@ -46,7 +46,14 @@ namespace NaturalSelection
 
             foreach (var ani in others)
             {
-                if (CheckMateability(ani))
+                var male = ani.IsMale ? ani : this;
+                var female = ani.IsMale ? this : ani;
+
+                //bool extraMateabilityCheck = true; //1a
+                //bool extraMateabilityCheck = male.GetGene("Dark coat") > female.GetGene("Dark coat"); //1b
+                bool extraMateabilityCheck = male.GetGene("Dark coat") > female.GetGene("Dark coat"); //1c
+
+                if (CheckMateability(ani) && extraMateabilityCheck)
                 {
                     return Mate(ani);
                 }

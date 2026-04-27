@@ -15,7 +15,10 @@ namespace NaturalSelection
 
         static internal void RunEcology()
         {
-            var arena = new EcologyArena(30, 30);
+            var arena = new EcologyArena(30, 30)
+            {
+                MaxTime = 365
+            };
             arena.AddAnimals<Hare>(nHares);
             //arena.AddAnimals<Lynx>(nLynx);
 
@@ -34,19 +37,27 @@ namespace NaturalSelection
                 foreach (var gene in typePair.Value)
                 {
                     int nBins = gene.Name == "Male" ? 2 : 10;
-                    sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key), gene.Name);
+                    if (typePair.Key == typeof(Hare) && gene.Name == "Dark coat")
+                    {
+                        sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key, true), "Male dark coat");
+                        sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key, false), "Female dark coat");
+                    }
+                    else
+                    {
+                        sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key), gene.Name);
+                    }
                 }
             }
 
             sim.Show();
         }
 
-        static private List<double> ListGene(EcologyArena arena, string gene, Type type)
+        static private List<double> ListGene(EcologyArena arena, string gene, Type type, bool? isMale = null)
         {
             var response = new List<double>();
             foreach (var animal in arena.GetObjectsOfType<EcologyAnimal>())
             {
-                if (animal.GetType() == type)
+                if (animal.GetType() == type && (isMale == null || animal.IsMale == isMale))
                 {
                     response.Add(animal.GetGene(gene));
                 }

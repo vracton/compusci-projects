@@ -8,6 +8,8 @@ namespace NaturalSelection
 {
     public class EcologyArena : ArenaEngine
     {
+        public double? MaxTime { get; set; }
+
         public EcologyArena(double x, double y) :
             base(x, y, "dirt.jpg")
         {
@@ -69,7 +71,7 @@ namespace NaturalSelection
 
         protected override bool Done()
         {
-            return !GetObjectsOfType<MovingObject>().Any();
+            return (MaxTime.HasValue && Time >= MaxTime.Value) || !GetObjectsOfType<MovingObject>().Any();
         }
     }
 }
