@@ -62,15 +62,14 @@ namespace NaturalSelection
 
             if (Energy < 100)
             {
-                var prey = GetNearby<Hare>(Stats.DistanceToEat);
+                var prey = new List<Hare>(GetNearby<Hare>(Stats.DistanceToEat));
+                prey.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+
                 if (Arena.GetObjectsOfType<Hare>().Count() > 100)
                 {
                     foreach (var ani in prey)
                     {
-                        //bool extraEatCheck = true;
-                        bool extraEatCheck = ani.GetGene("Dark coat") > 10;
-
-                        if (extraEatCheck && ArenaEngine.Random.NextDouble() < huntingSuccessFactor)
+                        if (ArenaEngine.Random.NextDouble() < huntingSuccessFactor)
                             return CarnivoreEat(ani);
                     }
                 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using GraphData;
+using GraphControl;
 using static GraphData.GraphDataManager;
 using static WPFUtility.UtilityFunctions;
 
@@ -11,7 +12,7 @@ namespace NaturalSelection
     static class EcologyDriver
     {
         private const int nHares = 100;
-        private const int nLynx = 40;
+        private const int nLynx = 30;
 
         static internal void RunEcology()
         {
@@ -20,12 +21,13 @@ namespace NaturalSelection
                 MaxTime = 1825 //5 years
             };
             arena.AddAnimals<Hare>(nHares);
-            //arena.AddAnimals<Lynx>(nLynx);
+            arena.AddAnimals<Lynx>(nLynx);
 
             var sim = new EcologySim(arena)
             {
-                TimePerTurn = .1
+                TimePerTurn = .01
             };
+            Timeline.MaximumPoints = 1800;
 
             sim.Arena.Manager.AddGraph(
             [ new(new TimelinePrototype("Hare", Color.SandyBrown), new BasicFunctionPair(() => arena.Time, () => arena.GetObjectsOfType<Hare>().Count())),
