@@ -67,7 +67,10 @@ namespace NaturalSelection
                 {
                     foreach (var ani in prey)
                     {
-                        if (ArenaEngine.Random.NextDouble() < huntingSuccessFactor)
+                        //bool extraEatCheck = true;
+                        bool extraEatCheck = ani.GetGene("Dark coat") > 10;
+
+                        if (extraEatCheck && ArenaEngine.Random.NextDouble() < huntingSuccessFactor)
                             return CarnivoreEat(ani);
                     }
                 }

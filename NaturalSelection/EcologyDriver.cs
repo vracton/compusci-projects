@@ -11,7 +11,7 @@ namespace NaturalSelection
     static class EcologyDriver
     {
         private const int nHares = 100;
-        private const int nLynx = 20;
+        private const int nLynx = 40;
 
         static internal void RunEcology()
         {
@@ -20,7 +20,7 @@ namespace NaturalSelection
                 MaxTime = 365
             };
             arena.AddAnimals<Hare>(nHares);
-            //arena.AddAnimals<Lynx>(nLynx);
+            arena.AddAnimals<Lynx>(nLynx);
 
             var sim = new EcologySim(arena)
             {
