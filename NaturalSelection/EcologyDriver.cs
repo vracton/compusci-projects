@@ -17,10 +17,10 @@ namespace NaturalSelection
         {
             var arena = new EcologyArena(30, 30)
             {
-                MaxTime = 365
+                MaxTime = 1825 //5 years
             };
             arena.AddAnimals<Hare>(nHares);
-            arena.AddAnimals<Lynx>(nLynx);
+            //arena.AddAnimals<Lynx>(nLynx);
 
             var sim = new EcologySim(arena)
             {
@@ -41,6 +41,7 @@ namespace NaturalSelection
                     {
                         sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key, true), "Male dark coat");
                         sim.Arena.Manager.AddHist(nBins, ConvertColor(gene.Color), () => ListGene(arena, gene.Name, typePair.Key, false), "Female dark coat");
+                        sim.Arena.Manager.AddText("Mean hare dark coat", ConvertColor(gene.Color), () => MeanGene(arena, gene.Name, typePair.Key).ToString("F2"));
                     }
                     else
                     {
@@ -63,6 +64,17 @@ namespace NaturalSelection
                 }
             }
             return response;
+        }
+
+        static private double MeanGene(EcologyArena arena, string gene, Type type)
+        {
+            var values = ListGene(arena, gene, type);
+            if (values.Count == 0)
+            {
+                return 0;
+            }
+
+            return values.Average();
         }
     }
 

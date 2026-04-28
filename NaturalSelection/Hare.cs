@@ -42,18 +42,20 @@ namespace NaturalSelection
 
         protected override EcologyTurn EcologyChooseAction()
         {
-            var others = GetNearby<Hare>(Stats.DistanceToMate);
+            var others = new List<Hare>(GetNearby<Hare>(Stats.DistanceToMate));
+
+            if (!IsMale)
+            {
+                others.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+            }
+            else
+            {
+                others.Sort((first, second) => first.GetGene("Dark coat").CompareTo(second.GetGene("Dark coat")));
+            }
 
             foreach (var ani in others)
             {
-                var male = ani.IsMale ? ani : this;
-                var female = ani.IsMale ? this : ani;
-
-                //bool extraMateabilityCheck = true; //1a
-                //bool extraMateabilityCheck = male.GetGene("Dark coat") > female.GetGene("Dark coat"); //1b
-                bool extraMateabilityCheck = male.GetGene("Dark coat") > female.GetGene("Dark coat"); //1c
-
-                if (CheckMateability(ani) && extraMateabilityCheck)
+                if (CheckMateability(ani))
                 {
                     return Mate(ani);
                 }
