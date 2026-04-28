@@ -32,16 +32,16 @@ namespace NaturalSelection
             Stats.DistanceToEat = 4;
             Stats.DistanceToMate = 3;
             Stats.EnergyAsFood = 10;
-            Stats.EnergyToEat = 10;
+            Stats.EnergyToEat = 12;
             Stats.EnergyToMate = 10;
             Stats.EnergyToMove = 1;
-            Stats.GestationTime = 3;
+            Stats.GestationTime = 4;
             Stats.InitialEnergy = 100;
             Stats.LitterSize = 1;
             Stats.MaxEnergyStorage = 200;
             Stats.MaxMovingDistance = 2;
             Stats.MeanLifeSpan = 50;
-            Stats.MetabolicConsumption = 2;
+            Stats.MetabolicConsumption = 3;
         }
 
         protected override EcologyTurn EcologyChooseAction()
@@ -62,10 +62,15 @@ namespace NaturalSelection
 
             if (Energy < 100)
             {
-                var prey = new List<Hare>(GetNearby<Hare>(Stats.DistanceToEat));
-                //prey.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+                var prey = new List<EcologyAnimal>();
+                prey.AddRange(GetNearby<Hare>(Stats.DistanceToEat));
+                prey.AddRange(GetNearby<Alien>(Stats.DistanceToEat));
 
-                if (Arena.GetObjectsOfType<Hare>().Count() > 100)
+                //prey.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+                prey.Sort((first, second) => HuntingSuccess(second).CompareTo(HuntingSuccess(first)));
+
+                //if (Arena.GetObjectsOfType<Hare>().Count() > 100)
+                if (prey.Count > 0)
                 {
                     foreach (var ani in prey)
                     {
@@ -83,10 +88,23 @@ namespace NaturalSelection
             return Math.Abs(hare.GetGene("Dark coat") - cell.CamouflageColor) * .0005 + .005; //abs will prob return [0, 20], so this takes to [.005, .015]
         }
 
+        private double HuntingSuccess(EcologyAnimal prey)
+        {
+            const double baseHuntingSuccess = .01;
+            double appearance = prey is Hare hare ? hare.GetGene("Likeness") : 1;
+            return baseHuntingSuccess / (1 + GetGene("Aversion") * appearance);
+        }
+
+        public void LoseEnergy()
+        {
+            RemoveEnergy(Energy * .2);
+        }
+
         protected override IList<GeneInfo> GetGeneList()
         {
             return [
-                new("Male", 0, 0, Colors.Aquamarine, GetType())
+                new("Male", 0, 0, Colors.Aquamarine, GetType()),
+                new("Aversion", .5, .05, Colors.Purple, GetType())
             ];
         }
     }

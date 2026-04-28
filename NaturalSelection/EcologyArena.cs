@@ -26,6 +26,7 @@ namespace NaturalSelection
 
             Registry.AddEntry(new GraphicInfo("rabbit.png", .2, .2));
             Registry.AddEntry(new GraphicInfo("lynx.png", .2, .2));
+            Registry.AddEntry(new GraphicInfo("alien.png", .2, .2));
 
             for (int ix = 0; ix < Width; ++ix)
                 for (int iy = 0; iy < Height; ++iy)

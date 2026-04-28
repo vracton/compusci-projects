@@ -33,17 +33,17 @@ namespace NaturalSelection
 
         protected EcologyTurn HerbivoreEat()
         {
-            if (this is Hare hare)
+            if (this is Hare || this is Alien)
             {
-                return new HerbivoreEat(hare);
+                return new HerbivoreEat(this);
             }
             else
             {
-                throw new ArgumentException("Only Hares can eat grass.");
+                throw new ArgumentException("Only Hares and Aliens can eat grass.");
             }
         }
 
-        protected EcologyTurn CarnivoreEat(Hare prey)
+        protected EcologyTurn CarnivoreEat(EcologyAnimal prey)
         {
             if (this is Lynx lynx)
             {

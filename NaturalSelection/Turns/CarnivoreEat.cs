@@ -2,7 +2,7 @@
 
 namespace NaturalSelection.Turns
 {
-    public class CarnivoreEat(Lynx owner, Hare prey) : Eat(owner)
+    public class CarnivoreEat(Lynx owner, EcologyAnimal prey) : Eat(owner)
     {
         public override bool DoTurn()
         {
@@ -19,6 +19,10 @@ namespace NaturalSelection.Turns
             double nutrition = prey.Stats.EnergyAsFood;
             prey.IsDead = true;
             Owner.Eat(nutrition);
+            if (prey is Alien)
+            {
+                owner.LoseEnergy();
+            }
             return true;
         }
     }

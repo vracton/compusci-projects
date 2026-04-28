@@ -1,6 +1,6 @@
 ﻿namespace NaturalSelection.Turns
 {
-    public class HerbivoreEat(Hare owner) : Eat(owner)
+    public class HerbivoreEat(EcologyAnimal owner) : Eat(owner)
     {
         public override bool DoTurn()
         {

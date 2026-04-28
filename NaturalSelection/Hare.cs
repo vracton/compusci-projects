@@ -75,7 +75,8 @@ namespace NaturalSelection
         {
             return [ 
                 new("Male", 0, 0, Colors.Chartreuse, GetType()),
-                new("Dark coat", 5, 1, Colors.Brown, GetType())
+                new("Dark coat", 5, 1, Colors.Brown, GetType()),
+                new("Likeness", .05, .01, Colors.LightSeaGreen, GetType())
             ];
         }
     }
