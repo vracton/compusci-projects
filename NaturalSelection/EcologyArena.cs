@@ -9,10 +9,13 @@ namespace NaturalSelection
     public class EcologyArena : ArenaEngine
     {
         public double? MaxTime { get; set; }
+        private readonly Func<int, int, int> camouflageColorFunc;
 
-        public EcologyArena(double x, double y) :
+        public EcologyArena(double x, double y, Func<int, int, int>? camouflageColorFunc = null) :
             base(x, y, "dirt.jpg")
         {
+            this.camouflageColorFunc = camouflageColorFunc ?? ((_, _) => 10);
+
             Registry.Initialize(@"NaturalSelection\", @"Images\");
 
             Registry.AddEntry(new GraphicInfo("dirttex.jpg", 1, 1));
@@ -45,7 +48,7 @@ namespace NaturalSelection
 
         private void AddCell(int x, int y)
         {
-            var cell = new FoodCell();
+            var cell = new FoodCell(camouflageColorFunc(x, y));
             AddObject(cell, new Geometry.Geometry2D.Point(x + .5, y + .5));
             cells.Add(new Coordinate2D(x, y), cell);
         }

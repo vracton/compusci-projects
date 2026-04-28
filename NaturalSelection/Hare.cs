@@ -44,14 +44,14 @@ namespace NaturalSelection
         {
             var others = new List<Hare>(GetNearby<Hare>(Stats.DistanceToMate));
 
-            if (!IsMale)
-            {
-                others.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
-            }
-            else
-            {
-                others.Sort((first, second) => first.GetGene("Dark coat").CompareTo(second.GetGene("Dark coat")));
-            }
+            //if (!IsMale)
+            //{
+            //    others.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+            //}
+            //else
+            //{
+            //    others.Sort((first, second) => first.GetGene("Dark coat").CompareTo(second.GetGene("Dark coat")));
+            //}
 
             foreach (var ani in others)
             {

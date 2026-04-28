@@ -58,23 +58,29 @@ namespace NaturalSelection
                 }
             }
 
-            const double huntingSuccessFactor = .01;
+            // const double huntingSuccessFactor = .01;
 
             if (Energy < 100)
             {
                 var prey = new List<Hare>(GetNearby<Hare>(Stats.DistanceToEat));
-                prey.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
+                //prey.Sort((first, second) => second.GetGene("Dark coat").CompareTo(first.GetGene("Dark coat")));
 
                 if (Arena.GetObjectsOfType<Hare>().Count() > 100)
                 {
                     foreach (var ani in prey)
                     {
-                        if (ArenaEngine.Random.NextDouble() < huntingSuccessFactor)
+                        if (ArenaEngine.Random.NextDouble() < HuntingSuccess(ani))
                             return CarnivoreEat(ani);
                     }
                 }
             }
             return MoveRandom();
+        }
+
+        private double HuntingSuccess(Hare hare)
+        {
+            var cell = Arena.CurrentCell(hare.Position.PositionVector);
+            return Math.Abs(hare.GetGene("Dark coat") - cell.CamouflageColor) * .0005 + .005; //abs will prob return [0, 20], so this takes to [.005, .015]
         }
 
         protected override IList<GeneInfo> GetGeneList()

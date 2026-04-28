@@ -8,6 +8,7 @@ namespace NaturalSelection
     public class FoodCell : StationaryObject
     {
         public double FoodAmount { get; set; } = 0;
+        public int CamouflageColor { get; }
 
         public override string Name => "Food cell";
 
@@ -23,9 +24,10 @@ namespace NaturalSelection
 
         private const int layer = 1;
 
-        public FoodCell() :
+        public FoodCell(int camouflageColor) :
             base(0, layer, 1, 1)
         {
+            CamouflageColor = camouflageColor;
             foodMax = ArenaEngine.Random.NextGaussian(foodMaxMean, foodMaxSD);
             if (foodMax < 0)
             {
