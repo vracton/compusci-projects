@@ -52,12 +52,26 @@ namespace Visualizer.RaceToTheBottom
         private const double MinimumDistanceSquared = MinimumDistance * MinimumDistance;
         public RaceToTheBottomEngine(string filename)
         {
+            AddDataSet(filename, false);
+        }
+
+        public RaceToTheBottomEngine(string backgroundFilename, string signalFilename)
+        {
+            AddDataSet(backgroundFilename, false);
+            AddDataSet(signalFilename, true);
+        }
+
+        private void AddDataSet(string filename, bool isSignal)
+        {
             var dataset = DataSet.ReadDataSet(filename);
             foreach (var dataPoint in dataset.Points)
             {
                 Vector position = new(dataPoint.Variables[0], dataPoint.Variables[1], dataPoint.Variables[2]);
                 Color color = Color.FromRgb((byte)dataPoint.Variables[3], (byte)dataPoint.Variables[4], (byte)dataPoint.Variables[5]);
-                var point = new Point(position, color);
+                var point = new Point(position, color)
+                {
+                    IsSignal = isSignal
+                };
                 Points.Add(point);
             }
         }

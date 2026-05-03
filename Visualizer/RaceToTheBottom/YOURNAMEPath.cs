@@ -41,5 +41,24 @@ namespace Visualizer.RaceToTheBottom
                 previousPosition = location;
             }
         }
+
+        public YOURNAMEPath(int datasetNumber)
+        {
+            Vector initialPosition = new(0, 0, 101); // You can change the x and y values
+                                                     // to be anything you want
+                                                     // z has to be 101
+            var signalData = DataSet.ReadDataSet(filePath + $"signal{datasetNumber}TrainingSample.dat");
+
+            Vector previousPosition = initialPosition;
+            foreach (var dataPoint in signalData.Points)
+            {
+                Vector location = new(dataPoint.Variables[0], dataPoint.Variables[1], dataPoint.Variables[2]);
+
+                var segment = new SimpleLinearPath(previousPosition, location);
+                AddPath(segment);
+
+                previousPosition = location;
+            }
+        }
     }
 }
